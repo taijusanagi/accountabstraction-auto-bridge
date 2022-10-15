@@ -7,19 +7,20 @@ import { EntryPoint, EntryPoint__factory, UserOperationStruct } from "@account-a
 import { SimpleWalletAPI } from "@account-abstraction/sdk";
 import { rethrowError } from "@account-abstraction/utils";
 import { SampleRecipient, SampleRecipient__factory } from "@account-abstraction/utils/dist/src/types";
+import { Hop } from "@hop-protocol/sdk";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 
+import { AccountAbstractionWalletAPI } from "../lib/AccountAbstractionWalletAPI";
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
-import { SwapGateWalletAPI } from "../lib/SwapGateWalletAPI";
-import { SwapGateWalletDeployer__factory } from "../typechain-types";
+import { AccountAbstractionWalletDeployer__factory } from "../typechain-types";
 
 const provider = ethers.provider;
 
-describe("SocialRecoveryWallet", () => {
+describe("AccountAbstractionWallet", () => {
   let signer: SignerWithAddress;
   let owner: SignerWithAddress;
   let api: SimpleWalletAPI;
@@ -35,8 +36,8 @@ describe("SocialRecoveryWallet", () => {
     entryPoint = await new EntryPoint__factory(signer).deploy(1, 1);
     beneficiary = await signer.getAddress();
     recipient = await new SampleRecipient__factory(signer).deploy();
-    factoryAddress = await DeterministicDeployer.deploy(SwapGateWalletDeployer__factory.bytecode);
-    api = new SwapGateWalletAPI({
+    factoryAddress = await DeterministicDeployer.deploy(AccountAbstractionWalletDeployer__factory.bytecode);
+    api = new AccountAbstractionWalletAPI({
       provider,
       entryPointAddress: entryPoint.address,
       owner,
@@ -44,7 +45,7 @@ describe("SocialRecoveryWallet", () => {
     });
   });
 
-  describe("Same test with SimpleWalletAPI to assure the compatibility", () => {
+  describe("Account Abstraction", () => {
     it("#getRequestId should match entryPoint.getRequestId", async function () {
       const userOp: UserOperationStruct = {
         sender: "0x".padEnd(42, "1"),
@@ -128,11 +129,18 @@ describe("SocialRecoveryWallet", () => {
 
     describe("Additional testing", () => {
       it("getCreate2Address in factory", async function () {
-        const factory = SwapGateWalletDeployer__factory.connect(factoryAddress, provider);
+        const factory = AccountAbstractionWalletDeployer__factory.connect(factoryAddress, provider);
         const salt = 0;
         const calculatedAddress = await factory.getCreate2Address(entryPoint.address, owner.address, salt);
         expect(walletAddress).to.eq(calculatedAddress);
       });
+    });
+  });
+
+  describe("Hop Integration", () => {
+    it("should work", async function () {
+      const hop = new Hop("goerli");
+      console.log(hop);
     });
   });
 });

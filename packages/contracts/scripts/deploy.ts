@@ -5,7 +5,7 @@ import { ethers, network } from "hardhat";
 import path from "path";
 
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
-import { SwapGateWalletDeployer__factory } from "../typechain-types";
+import { AccountAbstractionWalletDeployer__factory } from "../typechain-types";
 
 async function main() {
   const argument = ethers.utils.defaultAbiCoder.encode(["uint256", "uint256"], [1, 1]);
@@ -14,7 +14,7 @@ async function main() {
     [EntryPoint__factory.bytecode, argument]
   );
   const entryPointAddress = await DeterministicDeployer.deploy(entryPointCreationCode);
-  const factoryAddress = await DeterministicDeployer.deploy(SwapGateWalletDeployer__factory.bytecode);
+  const factoryAddress = await DeterministicDeployer.deploy(AccountAbstractionWalletDeployer__factory.bytecode);
   const result = {
     entryPoint: entryPointAddress,
     factory: factoryAddress,

@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { useNetwork, useSigner } from "wagmi";
 
 import deployments from "../../../contracts/deployments.json";
-import { SwapGateWalletAPI } from "../../../contracts/lib/SwapGateWalletAPI";
+import { AccountAbstractionWalletAPI } from "../../../contracts/lib/AccountAbstractionWalletAPI";
 
 export const useAccountAbstraction = () => {
   const { data: signer } = useSigner();
 
   const { chain } = useNetwork();
 
-  const [contractWalletAPI, setContractWalletAPI] = useState<SwapGateWalletAPI>();
+  const [contractWalletAPI, setContractWalletAPI] = useState<AccountAbstractionWalletAPI>();
   const [contractWalletAddress, setContractWalletAddress] = useState("");
   const [contractWalletBalance, setContractWalletBalance] = useState("0.0");
 
@@ -47,7 +47,7 @@ export const useAccountAbstraction = () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const provider = signer.provider!;
       const owner = signer;
-      const contractWalletAPI = new SwapGateWalletAPI({
+      const contractWalletAPI = new AccountAbstractionWalletAPI({
         provider,
         entryPointAddress: deployments.entryPoint,
         owner,

@@ -3,19 +3,19 @@ import { SimpleWalletAPI } from "@account-abstraction/sdk";
 import { hexConcat } from "ethers/lib/utils";
 
 import {
-  SwapGateWallet,
-  SwapGateWallet__factory,
-  SwapGateWalletDeployer,
-  SwapGateWalletDeployer__factory,
+  AccountAbstractionWallet,
+  AccountAbstractionWallet__factory,
+  AccountAbstractionWalletDeployer,
+  AccountAbstractionWalletDeployer__factory,
 } from "../typechain-types";
 
-export class SwapGateWalletAPI extends SimpleWalletAPI {
-  walletContract?: SwapGateWallet;
-  factory?: SwapGateWalletDeployer;
+export class AccountAbstractionWalletAPI extends SimpleWalletAPI {
+  walletContract?: AccountAbstractionWallet;
+  factory?: AccountAbstractionWalletDeployer;
 
-  async _getWalletContract(): Promise<SwapGateWallet> {
+  async _getWalletContract(): Promise<AccountAbstractionWallet> {
     if (this.walletContract == null) {
-      this.walletContract = SwapGateWallet__factory.connect(await this.getWalletAddress(), this.provider);
+      this.walletContract = AccountAbstractionWallet__factory.connect(await this.getWalletAddress(), this.provider);
     }
     return this.walletContract;
   }
@@ -23,7 +23,7 @@ export class SwapGateWalletAPI extends SimpleWalletAPI {
   async getCounterFactualAddress(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SwapGateWalletDeployer__factory.connect(this.factoryAddress, this.provider);
+        this.factory = AccountAbstractionWalletDeployer__factory.connect(this.factoryAddress, this.provider);
       } else {
         throw new Error("no factory to get initCode");
       }
@@ -34,7 +34,7 @@ export class SwapGateWalletAPI extends SimpleWalletAPI {
   async getWalletInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SwapGateWalletDeployer__factory.connect(this.factoryAddress, this.provider);
+        this.factory = AccountAbstractionWalletDeployer__factory.connect(this.factoryAddress, this.provider);
       } else {
         throw new Error("no factory to get initCode");
       }

@@ -22,7 +22,10 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      chainId: 1337,
+      chainId: 5,
+      forking: {
+        url: "https://goerli.infura.io/v3/95f65ab099894076814e8526f52c9149",
+      },
     },
     goerli: {
       url: "https://goerli.infura.io/v3/95f65ab099894076814e8526f52c9149",

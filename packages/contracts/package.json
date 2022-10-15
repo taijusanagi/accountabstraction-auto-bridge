@@ -1,5 +1,5 @@
 {
-  "name": "@aa-swap-gate/contracts",
+  "name": "@aa-connect/contracts",
   "version": "0.0.1",
   "license": "MIT",
   "private": true,
@@ -44,6 +44,7 @@
   "dependencies": {
     "@account-abstraction/contracts": "^0.2.0",
     "@account-abstraction/sdk": "^0.2.1",
+    "@hop-protocol/sdk": "^0.0.1-beta.384",
     "@openzeppelin/contracts": "^4.7.3"
   }
 }

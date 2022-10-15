@@ -1,11 +1,9 @@
 /* eslint-disable camelcase */
-import { EntryPoint, EntryPoint__factory } from "@account-abstraction/contracts";
-import { Button, Flex, FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { EntryPoint__factory } from "@account-abstraction/contracts";
+import { Button, FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
 import { ethers } from "ethers";
 import { NextPage } from "next";
-import { useState } from "react";
-import { useAccount, useConnect, useSigner } from "wagmi";
+import { useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";

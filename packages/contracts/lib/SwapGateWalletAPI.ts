@@ -3,19 +3,19 @@ import { SimpleWalletAPI } from "@account-abstraction/sdk";
 import { hexConcat } from "ethers/lib/utils";
 
 import {
-  SandboxWallet,
-  SandboxWallet__factory,
-  SandboxWalletDeployer,
-  SandboxWalletDeployer__factory,
+  SwapGateWallet,
+  SwapGateWallet__factory,
+  SwapGateWalletDeployer,
+  SwapGateWalletDeployer__factory,
 } from "../typechain-types";
 
-export class SandboxWalletAPI extends SimpleWalletAPI {
-  walletContract?: SandboxWallet;
-  factory?: SandboxWalletDeployer;
+export class SwapGateWalletAPI extends SimpleWalletAPI {
+  walletContract?: SwapGateWallet;
+  factory?: SwapGateWalletDeployer;
 
-  async _getWalletContract(): Promise<SandboxWallet> {
+  async _getWalletContract(): Promise<SwapGateWallet> {
     if (this.walletContract == null) {
-      this.walletContract = SandboxWallet__factory.connect(await this.getWalletAddress(), this.provider);
+      this.walletContract = SwapGateWallet__factory.connect(await this.getWalletAddress(), this.provider);
     }
     return this.walletContract;
   }
@@ -23,7 +23,7 @@ export class SandboxWalletAPI extends SimpleWalletAPI {
   async getCounterFactualAddress(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SandboxWalletDeployer__factory.connect(this.factoryAddress, this.provider);
+        this.factory = SwapGateWalletDeployer__factory.connect(this.factoryAddress, this.provider);
       } else {
         throw new Error("no factory to get initCode");
       }
@@ -34,7 +34,7 @@ export class SandboxWalletAPI extends SimpleWalletAPI {
   async getWalletInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SandboxWalletDeployer__factory.connect(this.factoryAddress, this.provider);
+        this.factory = SwapGateWalletDeployer__factory.connect(this.factoryAddress, this.provider);
       } else {
         throw new Error("no factory to get initCode");
       }

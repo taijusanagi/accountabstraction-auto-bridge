@@ -14,8 +14,8 @@ import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
-import { SandboxWalletAPI } from "../lib/SandboxWalletAPI";
-import { SandboxWalletDeployer__factory } from "../typechain-types";
+import { SwapGateWalletAPI } from "../lib/SwapGateWalletAPI";
+import { SwapGateWalletDeployer__factory } from "../typechain-types";
 
 const provider = ethers.provider;
 
@@ -35,8 +35,8 @@ describe("SocialRecoveryWallet", () => {
     entryPoint = await new EntryPoint__factory(signer).deploy(1, 1);
     beneficiary = await signer.getAddress();
     recipient = await new SampleRecipient__factory(signer).deploy();
-    factoryAddress = await DeterministicDeployer.deploy(SandboxWalletDeployer__factory.bytecode);
-    api = new SandboxWalletAPI({
+    factoryAddress = await DeterministicDeployer.deploy(SwapGateWalletDeployer__factory.bytecode);
+    api = new SwapGateWalletAPI({
       provider,
       entryPointAddress: entryPoint.address,
       owner,
@@ -128,7 +128,7 @@ describe("SocialRecoveryWallet", () => {
 
     describe("Additional testing", () => {
       it("getCreate2Address in factory", async function () {
-        const factory = SandboxWalletDeployer__factory.connect(factoryAddress, provider);
+        const factory = SwapGateWalletDeployer__factory.connect(factoryAddress, provider);
         const salt = 0;
         const calculatedAddress = await factory.getCreate2Address(entryPoint.address, owner.address, salt);
         expect(walletAddress).to.eq(calculatedAddress);

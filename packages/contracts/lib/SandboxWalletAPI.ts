@@ -20,6 +20,17 @@ export class SandboxWalletAPI extends SimpleWalletAPI {
     return this.walletContract;
   }
 
+  async getCounterFactualAddress(): Promise<string> {
+    if (this.factory == null) {
+      if (this.factoryAddress != null && this.factoryAddress !== "") {
+        this.factory = SandboxWalletDeployer__factory.connect(this.factoryAddress, this.provider);
+      } else {
+        throw new Error("no factory to get initCode");
+      }
+    }
+    return this.factory.getCreate2Address(this.entryPointAddress, await this.owner.getAddress(), this.index);
+  }
+
   async getWalletInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {

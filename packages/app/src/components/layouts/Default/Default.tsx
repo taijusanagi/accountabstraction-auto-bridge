@@ -74,7 +74,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
           </Center>
           <Flex justify="space-between" alignItems={"center"} h="8">
             <Text fontSize="xl" fontWeight={"bold"}>
-              AA Link
+              AA Connect
             </Text>
             <HStack>
               <ConnectButton showBalance={false} chainStatus="none" />

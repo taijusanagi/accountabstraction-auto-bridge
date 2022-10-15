@@ -3,7 +3,6 @@
 /**
  ** This copied from @account-abstraction/sdk
  **/
-
 import { EntryPoint, EntryPoint__factory, UserOperationStruct } from "@account-abstraction/contracts";
 import { SimpleWalletAPI } from "@account-abstraction/sdk";
 import { rethrowError } from "@account-abstraction/utils";
@@ -27,6 +26,7 @@ describe("SocialRecoveryWallet", () => {
   let entryPoint: EntryPoint;
   let beneficiary: string;
   let recipient: SampleRecipient;
+  let factoryAddress: string;
   let walletAddress: string;
   let walletDeployed = false;
 
@@ -35,7 +35,7 @@ describe("SocialRecoveryWallet", () => {
     entryPoint = await new EntryPoint__factory(signer).deploy(1, 1);
     beneficiary = await signer.getAddress();
     recipient = await new SampleRecipient__factory(signer).deploy();
-    const factoryAddress = await DeterministicDeployer.deploy(SandboxWalletDeployer__factory.bytecode);
+    factoryAddress = await DeterministicDeployer.deploy(SandboxWalletDeployer__factory.bytecode);
     api = new SandboxWalletAPI({
       provider,
       entryPointAddress: entryPoint.address,
@@ -67,7 +67,6 @@ describe("SocialRecoveryWallet", () => {
     it("should deploy to counterfactual address", async () => {
       walletAddress = await api.getWalletAddress();
       expect(await provider.getCode(walletAddress).then((code) => code.length)).to.equal(2);
-
       await signer.sendTransaction({
         to: walletAddress,
         value: parseEther("0.1"),
@@ -76,7 +75,6 @@ describe("SocialRecoveryWallet", () => {
         target: recipient.address,
         data: recipient.interface.encodeFunctionData("something", ["hello"]),
       });
-
       await expect(entryPoint.handleOps([op], beneficiary))
         .to.emit(recipient, "Sender")
         .withArgs(anyValue, walletAddress, "hello");
@@ -126,6 +124,15 @@ describe("SocialRecoveryWallet", () => {
       await expect(entryPoint.handleOps([op1], beneficiary))
         .to.emit(recipient, "Sender")
         .withArgs(anyValue, walletAddress, "world");
+    });
+
+    describe("Additional testing", () => {
+      it("getCreate2Address in factory", async function () {
+        const factory = SandboxWalletDeployer__factory.connect(factoryAddress, provider);
+        const salt = 0;
+        const calculatedAddress = await factory.getCreate2Address(entryPoint.address, owner.address, salt);
+        expect(walletAddress).to.eq(calculatedAddress);
+      });
     });
   });
 });

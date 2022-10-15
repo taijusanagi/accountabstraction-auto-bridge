@@ -18,13 +18,9 @@ export interface PeerMeta {
   url: string;
 }
 
-// 0x0dA9e97B8e7ebF7D2017A0b530cC5767FFC06585
-
 const HomePage: NextPage = () => {
   const { contractWalletAPI, contractWalletAddress, contractWalletBalance } = useAccountAbstraction();
-
   const { data: signer } = useSigner();
-  const { address } = useAccount();
 
   const deposit = async () => {
     if (!contractWalletAddress || !signer) {
@@ -37,14 +33,14 @@ const HomePage: NextPage = () => {
   };
 
   const deploy = async () => {
-    if (!contractWalletAddress || !contractWalletAPI || !address) {
+    if (!contractWalletAddress || !contractWalletAPI || !signer) {
       return;
     }
+    const address = await signer.getAddress();
     const op = await contractWalletAPI.createSignedUserOp({
       target: NULL_ADDRESS,
       data: NULL_BYTES,
     });
-
     const entryPoint = EntryPoint__factory.connect(deployments.entryPoint, signer);
     await entryPoint.handleOps([op], address);
   };

@@ -1,5 +1,5 @@
 {
-  "name": "acountabstraction-sandbox",
+  "name": "aaconnect",
   "version": "0.0.1",
   "license": "MIT",
   "private": true,
@@ -12,9 +12,9 @@
     "prepare": "husky install",
     "format": "prettier '**/*.{json,md}' --ignore-path .gitignore --write",
     "dev": "run-p dev:*",
-    "dev:app": "yarn workspace @acountabstraction-sandbox/app dev",
+    "dev:app": "yarn workspace @aaconnect/app dev",
     "build": "run-p build:*",
-    "build:app": "yarn workspace @acountabstraction-sandbox/app build"
+    "build:app": "yarn workspace @aaconnect/app build"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",

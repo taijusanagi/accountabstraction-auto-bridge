@@ -19,7 +19,7 @@ async function main() {
     entryPoint: entryPointAddress,
     factory: factoryAddress,
   };
-  fs.writeFileSync(path.join(__dirname, `../deployments/${network.name}.json`), JSON.stringify(result));
+  fs.writeFileSync(path.join(__dirname, `../deployments.json`), JSON.stringify(result));
 }
 
 main().catch((error) => {

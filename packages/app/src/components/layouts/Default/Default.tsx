@@ -30,6 +30,10 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
     router.push("/connect");
   };
 
+  const onClickApp = () => {
+    router.push("/app");
+  };
+
   // ========== Style ===========
   const inActiveProps = {
     bgColor: "white",
@@ -47,8 +51,9 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
     _active: {},
   };
 
-  const accountButtonProps = currentPathBase === "" ? activeProps : inActiveProps;
+  const homeButtonProps = currentPathBase === "" ? activeProps : inActiveProps;
   const connectButtonProps = currentPathBase === "connect" ? activeProps : inActiveProps;
+  const appButtonProps = currentPathBase === "app" ? activeProps : inActiveProps;
 
   return (
     <Flex minHeight={"100vh"} direction={"column"}>
@@ -64,20 +69,23 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
             h="8"
           >
             <ButtonGroup bgColor={"white"} py="1" px="1" rounded="xl" shadow="md" size="xs">
-              <Button onClick={onClickAccount} {...accountButtonProps}>
+              <Button onClick={onClickAccount} {...homeButtonProps}>
                 Account
               </Button>
               <Button onClick={onClickConnect} {...connectButtonProps}>
                 Connect
               </Button>
+              <Button onClick={onClickConnect} {...appButtonProps}>
+                App
+              </Button>
             </ButtonGroup>
           </Center>
           <Flex justify="space-between" alignItems={"center"} h="8">
-            <Text fontSize="xl" fontWeight={"bold"}>
-              AA Connect
+            <Text fontSize="lg" fontWeight={"bold"}>
+              AAGate
             </Text>
             <HStack>
-              <ConnectButton showBalance={false} chainStatus="none" />
+              <ConnectButton accountStatus={"avatar"} showBalance={false} chainStatus={"name"} />
             </HStack>
           </Flex>
         </Box>

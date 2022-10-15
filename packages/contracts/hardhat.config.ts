@@ -28,6 +28,10 @@ const config: HardhatUserConfig = {
       url: "https://goerli.infura.io/v3/95f65ab099894076814e8526f52c9149",
       accounts,
     },
+    "arbitrum-goerli": {
+      url: "https://white-holy-snowflake.arbitrum-goerli.discover.quiknode.pro/efc6175cfe9ac7459d93f211cdfbbda8087ea401",
+      accounts,
+    },
   },
 };
 

@@ -1,11 +1,11 @@
-import { Button, FormControl, FormHelperText, FormLabel, Input, Stack, Text } from "@chakra-ui/react";
+import { Button, FormControl, FormLabel, Input, Stack, Text } from "@chakra-ui/react";
 import WalletConnect from "@walletconnect/client";
-import { convertHexToUtf8 } from "@walletconnect/utils";
 import { NextPage } from "next";
 import { useState } from "react";
-import { useAccount, useNetwork, useSigner } from "wagmi";
+import { useNetwork, useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
+import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
 
 export interface PeerMeta {
   name: string;
@@ -15,11 +15,11 @@ export interface PeerMeta {
 const HomePage: NextPage = () => {
   const network = useNetwork();
   const { data: signer } = useSigner();
-  const { address } = useAccount();
+
   const [connector, setConnector] = useState<WalletConnect>();
+  const { signAndSendTxWithBundler, contractWalletAddress } = useAccountAbstraction();
 
   const [walletConnectUri, setWalletConnectUri] = useState("");
-  const [isWalletConnectLoading, setIsWalletConnectLoading] = useState(false);
   const [walletConnectMode, setWalletConnectMode] = useState<"notConnected" | "connecting" | "connected">(
     "notConnected"
   );
@@ -56,36 +56,21 @@ const HomePage: NextPage = () => {
       if (error) {
         throw error;
       }
-      if (payload.method === "personal_sign") {
-        console.log("personal_sign");
-        const message = convertHexToUtf8(payload.params[0]);
-        console.log("message", message);
-        const signature = await signer?.signMessage(message);
-        console.log(signature);
+      if (payload.method === "eth_sendTransaction") {
+        console.log("eth_sendTransaction");
+        const tx = await signAndSendTxWithBundler(
+          payload.params[0].to,
+          payload.params[0].data,
+          payload.params[0].value
+        );
         const result = connector.approveRequest({
           id: payload.id,
-          result: signature,
+          result: tx,
         });
         console.log("result", result);
+      } else {
+        throw Error("not implemented");
       }
-
-      // if (payload.method === "eth_sendTransaction") {
-      //   if (!socialRecoveryWalletAPI || !entryPoint || !address) {
-      //     return;
-      //   }
-      //   console.log("eth_sendTransaction");
-      //   const op = await socialRecoveryWalletAPI.createSignedUserOp({
-      //     target: payload.params[0].to,
-      //     data: payload.params[0].data,
-      //     value: payload.params[0].value,
-      //   });
-      //   const { hash } = await entryPoint.handleOps([op], address);
-      //   const result = connector.approveRequest({
-      //     id: payload.id,
-      //     result: hash,
-      //   });
-      //   console.log("result", result);
-      // }
     });
 
     connector.on("disconnect", (error, payload) => {
@@ -101,7 +86,7 @@ const HomePage: NextPage = () => {
     if (!connector || !network.chain) {
       return;
     }
-    // connector.approveSession({ chainId: network.chain.id, accounts: [socialRecoveryWalletAddress] });
+    connector.approveSession({ chainId: network.chain.id, accounts: [contractWalletAddress] });
     setWalletConnectMode("connected");
   };
 
@@ -117,6 +102,9 @@ const HomePage: NextPage = () => {
     <DefaultLayout>
       <Stack spacing="8">
         <Stack spacing="4">
+          <Text fontSize={"xl"} fontWeight="bold">
+            ConnectApps
+          </Text>
           {walletConnectMode === "notConnected" && (
             <Stack spacing="2">
               <FormControl>
@@ -128,21 +116,25 @@ const HomePage: NextPage = () => {
                   onChange={(e) => setWalletConnectUri(e.target.value)}
                 />
               </FormControl>
-              <Button
-                w="full"
-                isLoading={isWalletConnectLoading}
-                onClick={connectWalletConnect}
-                colorScheme="brand"
-                isDisabled={!walletConnectUri}
-              >
+              <Button w="full" onClick={connectWalletConnect} colorScheme="brand" isDisabled={!walletConnectUri}>
                 Connect
               </Button>
             </Stack>
           )}
           {peerMeta && (
             <Stack spacing="2">
-              <Text fontSize={"xs"}>{peerMeta.url}</Text>
-              <Text fontSize={"xs"}>{peerMeta.name}</Text>
+              <FormControl>
+                <FormLabel fontSize="md" fontWeight="bold">
+                  URL
+                </FormLabel>
+                <Text fontSize={"xs"}>{peerMeta.url}</Text>
+              </FormControl>
+              <FormControl>
+                <FormLabel fontSize="md" fontWeight="bold">
+                  Name
+                </FormLabel>
+                <Text fontSize={"xs"}>{peerMeta.name}</Text>
+              </FormControl>
             </Stack>
           )}
           {walletConnectMode === "connecting" && (
@@ -153,7 +145,12 @@ const HomePage: NextPage = () => {
           )}
           {walletConnectMode === "connected" && (
             <Stack spacing="2">
-              <Text>Connected</Text>
+              <FormControl>
+                <FormLabel fontSize="md" fontWeight="bold">
+                  Status
+                </FormLabel>
+                <Text fontSize={"xs"}>Connected</Text>
+              </FormControl>
             </Stack>
           )}
         </Stack>

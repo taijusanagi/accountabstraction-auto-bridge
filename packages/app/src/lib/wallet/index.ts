@@ -2,7 +2,7 @@ import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { Chain, chain, configureChains, createClient } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
 
-const { chains, provider } = configureChains([chain.goerli], [publicProvider()]);
+const { chains, provider } = configureChains([chain.goerli, chain.arbitrumGoerli], [publicProvider()]);
 
 export interface RainbowWeb3AuthConnectorProps {
   chains: Chain[];

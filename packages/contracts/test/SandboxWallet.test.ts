@@ -11,29 +11,18 @@ import { SampleRecipient, SampleRecipient__factory } from "@account-abstraction/
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { Wallet } from "ethers";
-import { formatEther, parseEther } from "ethers/lib/utils";
+import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
-import { PaymasterAPI } from "../lib/PaymasterAPI";
-import { SocialRecoveryWalletAPI } from "../lib/SocialRecoveryWalletAPI";
-import {
-  MockPaymaster__factory,
-  SocialRecoveryWallet,
-  SocialRecoveryWalletDeployer__factory,
-} from "../typechain-types";
+import { SandboxWalletAPI } from "../lib/SandboxWalletAPI";
+import { SandboxWalletDeployer__factory } from "../typechain-types";
 
 const provider = ethers.provider;
 
 describe("SocialRecoveryWallet", () => {
   let signer: SignerWithAddress;
   let owner: SignerWithAddress;
-  let initiateGuardian: SignerWithAddress;
-  let supportGuardian: SignerWithAddress;
-  let additionalGuardian: SignerWithAddress;
-  let guardians: string[];
-  let threshold: number;
   let api: SimpleWalletAPI;
   let entryPoint: EntryPoint;
   let beneficiary: string;
@@ -42,15 +31,12 @@ describe("SocialRecoveryWallet", () => {
   let walletDeployed = false;
 
   before("init", async () => {
-    [signer, owner, initiateGuardian, supportGuardian, additionalGuardian] = await ethers.getSigners();
+    [signer, owner] = await ethers.getSigners();
     entryPoint = await new EntryPoint__factory(signer).deploy(1, 1);
     beneficiary = await signer.getAddress();
     recipient = await new SampleRecipient__factory(signer).deploy();
-
-    // await signer.sendTransaction({ to: paymaster.address, value: parseEther("10") });
-
-    const factoryAddress = await DeterministicDeployer.deploy(SocialRecoveryWalletDeployer__factory.bytecode);
-    api = new SocialRecoveryWalletAPI({
+    const factoryAddress = await DeterministicDeployer.deploy(SandboxWalletDeployer__factory.bytecode);
+    api = new SandboxWalletAPI({
       provider,
       entryPointAddress: entryPoint.address,
       owner,
@@ -140,43 +126,6 @@ describe("SocialRecoveryWallet", () => {
       await expect(entryPoint.handleOps([op1], beneficiary))
         .to.emit(recipient, "Sender")
         .withArgs(anyValue, walletAddress, "world");
-    });
-  });
-
-  /**
-   ** This social recovery function uses plain ethers
-   **/
-  describe("Additional Test for Social Recovery", () => {
-    let contract: SocialRecoveryWallet;
-
-    before("init", async () => {
-      contract = await ethers.getContractAt("SocialRecoveryWallet", walletAddress);
-      guardians = [initiateGuardian.address, supportGuardian.address, additionalGuardian.address];
-      threshold = 2;
-      await contract.connect(owner).setGuardians(guardians, threshold);
-    });
-
-    it("should set constructor value", async () => {
-      for (const guardian of guardians) {
-        expect(await contract.isGuardian(guardian)).to.equal(true);
-      }
-      expect(await contract.threshold()).to.equal(threshold);
-    });
-
-    /**
-     ** due to time constrain, only positive test is done
-     **/
-    it("should work", async () => {
-      const newOwner = Wallet.createRandom();
-      await contract.connect(initiateGuardian).initiateRecovery(newOwner.address);
-      await contract.connect(supportGuardian).supportRecovery(newOwner.address);
-      await contract
-        .connect(initiateGuardian)
-        .executeRecovery(newOwner.address, [initiateGuardian.address, supportGuardian.address]);
-      expect(await contract.owner()).to.equal(newOwner.address);
-
-      // double check
-      await api.getWalletAddress();
     });
   });
 });

@@ -1,134 +1,84 @@
 /* eslint-disable camelcase */
-import { Button, FormControl, FormHelperText, FormLabel, Stack, Text } from "@chakra-ui/react";
+import { EntryPoint, EntryPoint__factory } from "@account-abstraction/contracts";
+import { Button, Flex, FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ethers } from "ethers";
-import { parseEther } from "ethers/lib/utils";
 import { NextPage } from "next";
-import { useEffect, useState } from "react";
-import { useAccount, useSigner } from "wagmi";
+import { useState } from "react";
+import { useAccount, useConnect, useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
-import { useSocialRecoveryWallet } from "@/hooks/useSocialRecoveryWallet";
+import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
 
+import deployments from "../../../contracts/deployments/goerli.json";
 import { NULL_ADDRESS, NULL_BYTES } from "../../../contracts/lib/utils";
-import { SocialRecoveryWallet__factory } from "../../../contracts/typechain-types";
 
 export interface PeerMeta {
   name: string;
   url: string;
 }
 
+// 0x0dA9e97B8e7ebF7D2017A0b530cC5767FFC06585
+
 const HomePage: NextPage = () => {
-  const { socialRecoveryWalletAddress, entryPoint, socialRecoveryWalletAPI, isDeployed, balance } =
-    useSocialRecoveryWallet();
+  const { contractWalletAPI, contractWalletAddress, contractWalletBalance } = useAccountAbstraction();
 
   const { data: signer } = useSigner();
   const { address } = useAccount();
-  const [isWalletConnectLoading] = useState(false);
 
-  const [owner, setOwner] = useState("");
-
-  const deploy = async () => {
-    if (!socialRecoveryWalletAPI || !entryPoint || !signer || !address) {
+  const deposit = async () => {
+    if (!contractWalletAddress || !signer) {
       return;
     }
     await signer.sendTransaction({
-      to: socialRecoveryWalletAddress,
-      value: parseEther("0.01"),
+      to: contractWalletAddress,
+      value: ethers.utils.parseEther("0.01"),
     });
   };
 
-  const deploy2 = async () => {
-    if (!socialRecoveryWalletAPI || !entryPoint || !signer || !address) {
+  const deploy = async () => {
+    if (!contractWalletAddress || !contractWalletAPI || !address) {
       return;
     }
-    const op = await socialRecoveryWalletAPI.createSignedUserOp({
+    const op = await contractWalletAPI.createSignedUserOp({
       target: NULL_ADDRESS,
       data: NULL_BYTES,
     });
+
+    const entryPoint = EntryPoint__factory.connect(deployments.entryPoint, signer);
     await entryPoint.handleOps([op], address);
   };
-  useEffect(() => {
-    if (!signer || !address || !socialRecoveryWalletAddress) {
-      return;
-    }
-    if (isDeployed) {
-      const contract = SocialRecoveryWallet__factory.connect(socialRecoveryWalletAddress, signer);
-      contract.owner().then((owner) => {
-        setOwner(owner);
-      });
-    } else {
-      setOwner(address);
-    }
-  }, [signer, address, socialRecoveryWalletAddress, isDeployed]);
 
   return (
     <DefaultLayout>
-      {socialRecoveryWalletAddress && (
-        <Stack spacing="8">
-          <Stack spacing="4">
-            <Stack spacing="2">
-              <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold">
-                  AcountAbstraction Address (ERC 4337)
-                </FormLabel>
-                <Text fontSize="xs">{socialRecoveryWalletAddress}</Text>
-                <FormHelperText fontSize="xs" color="blue.600">
-                  * AA address is determined counterfactually by create2
-                </FormHelperText>
-              </FormControl>
-              <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold">
-                  Owner
-                </FormLabel>
-                <Text fontSize="xs">{owner}</Text>
-                <FormHelperText fontSize="xs" color="blue.600">
-                  * owner is EOA for demo, but it could be any for easy onboarding
-                </FormHelperText>
-                <FormHelperText fontSize="xs" color="blue.600">
-                  * owner remap after recovery is not implemented for this demo
-                </FormHelperText>
-              </FormControl>
-              <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold">
-                  IsDeployed
-                </FormLabel>
-                <Text fontSize="xs">{isDeployed.toString()}</Text>
-                <FormHelperText fontSize="xs" color="blue.600">
-                  * no need to deploy to use acount abstraction wallet
-                </FormHelperText>
-              </FormControl>
-              <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold">
-                  Balance
-                </FormLabel>
-                <Text fontSize="xs">{ethers.utils.formatEther(balance)} ETH</Text>
-                <FormHelperText fontSize="xs" color="blue.600">
-                  * paymaster is not implemented so deposit is required for demo
-                </FormHelperText>
-                <FormHelperText fontSize="xs" color="blue.600">
-                  * This deposit is replaced by token or offchain payment (out of scope now)
-                </FormHelperText>
-              </FormControl>
-            </Stack>
-            <Stack>
-              <Button
-                w="full"
-                isLoading={isWalletConnectLoading}
-                onClick={deploy}
-                // disabled={isDeployed}
-                colorScheme="brand"
-              >
-                Deposit 0.01ETH
-                {/* {isDeployed ? "Already deployed" : "Deploy"} */}
-              </Button>
-              <Button w="full" isLoading={isWalletConnectLoading} onClick={deploy2} disabled={isDeployed}>
-                Deploy
-                {/* {isDeployed ? "Already deployed" : "Deploy"} */}
-              </Button>
-            </Stack>
+      <Stack spacing="8">
+        <Stack spacing="4">
+          <Stack spacing="2">
+            <FormControl>
+              <FormLabel fontSize="md" fontWeight="bold">
+                Account
+              </FormLabel>
+              <Text fontSize="xs">{contractWalletAddress || "not connected"}</Text>
+            </FormControl>
+            <FormControl>
+              <FormLabel fontSize="md" fontWeight="bold">
+                Balance
+              </FormLabel>
+              <Text fontSize="xs">{contractWalletBalance} ETH</Text>
+            </FormControl>
+          </Stack>
+          <Stack>
+            <Button w="full" isDisabled={!contractWalletAddress} onClick={deposit} colorScheme="brand">
+              Deposit 0.01ETH
+            </Button>
+          </Stack>
+          <Stack>
+            <Button w="full" isDisabled={!contractWalletAddress} onClick={deploy} colorScheme="brand">
+              Deploy
+            </Button>
           </Stack>
         </Stack>
-      )}
+      </Stack>
     </DefaultLayout>
   );
 };

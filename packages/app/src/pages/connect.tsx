@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useAccount, useNetwork, useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
-import { useSocialRecoveryWallet } from "@/hooks/useSocialRecoveryWallet";
 
 export interface PeerMeta {
   name: string;
@@ -14,7 +13,6 @@ export interface PeerMeta {
 }
 
 const HomePage: NextPage = () => {
-  const { socialRecoveryWalletAddress, entryPoint, socialRecoveryWalletAPI, isDeployed } = useSocialRecoveryWallet();
   const network = useNetwork();
   const { data: signer } = useSigner();
   const { address } = useAccount();
@@ -71,23 +69,23 @@ const HomePage: NextPage = () => {
         console.log("result", result);
       }
 
-      if (payload.method === "eth_sendTransaction") {
-        if (!socialRecoveryWalletAPI || !entryPoint || !address) {
-          return;
-        }
-        console.log("eth_sendTransaction");
-        const op = await socialRecoveryWalletAPI.createSignedUserOp({
-          target: payload.params[0].to,
-          data: payload.params[0].data,
-          value: payload.params[0].value,
-        });
-        const { hash } = await entryPoint.handleOps([op], address);
-        const result = connector.approveRequest({
-          id: payload.id,
-          result: hash,
-        });
-        console.log("result", result);
-      }
+      // if (payload.method === "eth_sendTransaction") {
+      //   if (!socialRecoveryWalletAPI || !entryPoint || !address) {
+      //     return;
+      //   }
+      //   console.log("eth_sendTransaction");
+      //   const op = await socialRecoveryWalletAPI.createSignedUserOp({
+      //     target: payload.params[0].to,
+      //     data: payload.params[0].data,
+      //     value: payload.params[0].value,
+      //   });
+      //   const { hash } = await entryPoint.handleOps([op], address);
+      //   const result = connector.approveRequest({
+      //     id: payload.id,
+      //     result: hash,
+      //   });
+      //   console.log("result", result);
+      // }
     });
 
     connector.on("disconnect", (error, payload) => {
@@ -103,7 +101,7 @@ const HomePage: NextPage = () => {
     if (!connector || !network.chain) {
       return;
     }
-    connector.approveSession({ chainId: network.chain.id, accounts: [socialRecoveryWalletAddress] });
+    // connector.approveSession({ chainId: network.chain.id, accounts: [socialRecoveryWalletAddress] });
     setWalletConnectMode("connected");
   };
 
@@ -117,62 +115,49 @@ const HomePage: NextPage = () => {
 
   return (
     <DefaultLayout>
-      {socialRecoveryWalletAddress && (
-        <Stack spacing="8">
-          <Stack spacing="4">
+      <Stack spacing="8">
+        <Stack spacing="4">
+          {walletConnectMode === "notConnected" && (
             <Stack spacing="2">
               <FormControl>
-                <FormLabel fontSize="md" fontWeight="bold">
-                  AcountAbstraction Address (ERC 4337)
-                </FormLabel>
-                <Text fontSize="xs">{socialRecoveryWalletAddress}</Text>
+                <FormLabel>Walelt Connect URL</FormLabel>
+                <Input
+                  type="text"
+                  fontSize="xs"
+                  value={walletConnectUri}
+                  onChange={(e) => setWalletConnectUri(e.target.value)}
+                />
               </FormControl>
+              <Button
+                w="full"
+                isLoading={isWalletConnectLoading}
+                onClick={connectWalletConnect}
+                colorScheme="brand"
+                isDisabled={!walletConnectUri}
+              >
+                Connect
+              </Button>
             </Stack>
-            {walletConnectMode === "notConnected" && (
-              <Stack spacing="2">
-                <FormControl>
-                  <FormLabel>Walelt Connect</FormLabel>
-                  <Input
-                    type="text"
-                    fontSize="xs"
-                    value={walletConnectUri}
-                    onChange={(e) => setWalletConnectUri(e.target.value)}
-                  />
-                  <FormHelperText fontSize="xs" color="blue.600">
-                    * input wallet connect url to connect
-                  </FormHelperText>
-                </FormControl>
-                <Button
-                  w="full"
-                  isLoading={isWalletConnectLoading}
-                  onClick={connectWalletConnect}
-                  colorScheme="brand"
-                  isDisabled={!walletConnectUri}
-                >
-                  Connect
-                </Button>
-              </Stack>
-            )}
-            {peerMeta && (
-              <Stack spacing="2">
-                <Text fontSize={"xs"}>{peerMeta.url}</Text>
-                <Text fontSize={"xs"}>{peerMeta.name}</Text>
-              </Stack>
-            )}
-            {walletConnectMode === "connecting" && (
-              <Stack spacing="2">
-                <Button onClick={approveSession}>{"Approve"}</Button>
-                <Button onClick={rejectSession}>{"Reject"}</Button>
-              </Stack>
-            )}
-            {walletConnectMode === "connected" && (
-              <Stack spacing="2">
-                <Text>Connected</Text>
-              </Stack>
-            )}
-          </Stack>
+          )}
+          {peerMeta && (
+            <Stack spacing="2">
+              <Text fontSize={"xs"}>{peerMeta.url}</Text>
+              <Text fontSize={"xs"}>{peerMeta.name}</Text>
+            </Stack>
+          )}
+          {walletConnectMode === "connecting" && (
+            <Stack spacing="2">
+              <Button onClick={approveSession}>{"Approve"}</Button>
+              <Button onClick={rejectSession}>{"Reject"}</Button>
+            </Stack>
+          )}
+          {walletConnectMode === "connected" && (
+            <Stack spacing="2">
+              <Text>Connected</Text>
+            </Stack>
+          )}
         </Stack>
-      )}
+      </Stack>
     </DefaultLayout>
   );
 };

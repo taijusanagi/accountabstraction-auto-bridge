@@ -3,18 +3,19 @@ import { SimpleWalletAPI } from "@account-abstraction/sdk";
 import { hexConcat } from "ethers/lib/utils";
 
 import {
-  SocialRecoveryWallet,
-  SocialRecoveryWallet__factory,
-  SocialRecoveryWalletDeployer__factory,
+  SandboxWallet,
+  SandboxWallet__factory,
+  SandboxWalletDeployer,
+  SandboxWalletDeployer__factory,
 } from "../typechain-types";
 
-export class SocialRecoveryWalletAPI extends SimpleWalletAPI {
-  walletContract?: SocialRecoveryWallet;
-  factory?: any;
+export class SandboxWalletAPI extends SimpleWalletAPI {
+  walletContract?: SandboxWallet;
+  factory?: SandboxWalletDeployer;
 
-  async _getWalletContract(): Promise<SocialRecoveryWallet> {
+  async _getWalletContract(): Promise<SandboxWallet> {
     if (this.walletContract == null) {
-      this.walletContract = SocialRecoveryWallet__factory.connect(await this.getWalletAddress(), this.provider);
+      this.walletContract = SandboxWallet__factory.connect(await this.getWalletAddress(), this.provider);
     }
     return this.walletContract;
   }
@@ -22,7 +23,7 @@ export class SocialRecoveryWalletAPI extends SimpleWalletAPI {
   async getWalletInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SocialRecoveryWalletDeployer__factory.connect(this.factoryAddress, this.provider);
+        this.factory = SandboxWalletDeployer__factory.connect(this.factoryAddress, this.provider);
       } else {
         throw new Error("no factory to get initCode");
       }
@@ -33,7 +34,6 @@ export class SocialRecoveryWalletAPI extends SimpleWalletAPI {
       ownerAddress,
       this.index,
     ]);
-    console.log(data);
     return hexConcat([this.factory.address, data]);
   }
 }

@@ -117,3 +117,5 @@ cache
 artifacts
 typechain-types
 packages/contracts/deployments/localhost.json
+
+mnemonic.txt

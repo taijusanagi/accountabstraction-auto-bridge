@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import { EntryPoint__factory } from "@account-abstraction/contracts";
+import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient";
 import { Button, FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
 import { ethers } from "ethers";
 import { NextPage } from "next";
@@ -34,13 +35,15 @@ const HomePage: NextPage = () => {
     if (!contractWalletAddress || !contractWalletAPI || !signer) {
       return;
     }
-    const address = await signer.getAddress();
+    // const address = await signer.getAddress();
     const op = await contractWalletAPI.createSignedUserOp({
       target: NULL_ADDRESS,
       data: NULL_BYTES,
     });
-    const entryPoint = EntryPoint__factory.connect(deployments.entryPoint, signer);
-    await entryPoint.handleOps([op], address);
+    const bundler = new HttpRpcClient("http://localhost:3000/rpc", deployments.entryPoint, 5);
+    await bundler.sendUserOpToBundler(op);
+    // const entryPoint = EntryPoint__factory.connect(deployments.entryPoint, signer);
+    // await entryPoint.handleOps([op], address);
   };
 
   return (

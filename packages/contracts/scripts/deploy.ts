@@ -8,11 +8,15 @@ import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
 import { SandboxWalletDeployer__factory } from "../typechain-types";
 
 async function main() {
-  const [signer] = await ethers.getSigners();
-  const entryPoint = await new EntryPoint__factory(signer).deploy(1, 1);
+  const argument = ethers.utils.defaultAbiCoder.encode(["uint256", "uint256"], [1, 1]);
+  const entryPointCreationCode = ethers.utils.solidityPack(
+    ["bytes", "bytes"],
+    [EntryPoint__factory.bytecode, argument]
+  );
+  const entryPointAddress = await DeterministicDeployer.deploy(entryPointCreationCode);
   const factoryAddress = await DeterministicDeployer.deploy(SandboxWalletDeployer__factory.bytecode);
   const result = {
-    entryPoint: entryPoint.address,
+    entryPoint: entryPointAddress,
     factory: factoryAddress,
   };
   fs.writeFileSync(path.join(__dirname, `../deployments/${network.name}.json`), JSON.stringify(result));

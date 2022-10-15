@@ -136,11 +136,4 @@ describe("AccountAbstractionWallet", () => {
       });
     });
   });
-
-  describe("Hop Integration", () => {
-    it("should work", async function () {
-      const hop = new Hop("goerli");
-      console.log(hop);
-    });
-  });
 });

@@ -2,7 +2,7 @@ import { Button, FormControl, FormLabel, Input, Stack, Text } from "@chakra-ui/r
 import WalletConnect from "@walletconnect/client";
 import { NextPage } from "next";
 import { useState } from "react";
-import { useNetwork, useSigner } from "wagmi";
+import { useNetwork } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
@@ -14,7 +14,6 @@ export interface PeerMeta {
 
 const HomePage: NextPage = () => {
   const network = useNetwork();
-  const { data: signer } = useSigner();
 
   const [connector, setConnector] = useState<WalletConnect>();
   const { signAndSendTxWithBundler, contractWalletAddress } = useAccountAbstraction();

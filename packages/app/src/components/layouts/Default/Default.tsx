@@ -30,8 +30,8 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
     router.push("/connect");
   };
 
-  const onClickApp = () => {
-    router.push("/app");
+  const onClickSwap = () => {
+    router.push("/swap");
   };
 
   // ========== Style ===========
@@ -53,7 +53,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
 
   const homeButtonProps = currentPathBase === "" ? activeProps : inActiveProps;
   const connectButtonProps = currentPathBase === "connect" ? activeProps : inActiveProps;
-  const appButtonProps = currentPathBase === "app" ? activeProps : inActiveProps;
+  const swapButtonProps = currentPathBase === "swap" ? activeProps : inActiveProps;
 
   return (
     <Flex minHeight={"100vh"} direction={"column"}>
@@ -75,14 +75,14 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
               <Button onClick={onClickConnect} {...connectButtonProps}>
                 Connect
               </Button>
-              <Button onClick={onClickConnect} {...appButtonProps}>
-                App
+              <Button onClick={onClickSwap} {...swapButtonProps}>
+                Swap
               </Button>
             </ButtonGroup>
           </Center>
           <Flex justify="space-between" alignItems={"center"} h="8">
             <Text fontSize="lg" fontWeight={"bold"}>
-              AAGate
+              AASwapGate
             </Text>
             <HStack>
               <ConnectButton accountStatus={"avatar"} showBalance={false} chainStatus={"name"} />

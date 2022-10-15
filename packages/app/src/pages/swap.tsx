@@ -4,42 +4,55 @@ import { FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
 import { NextPage } from "next";
 
 import { DefaultLayout } from "@/components/layouts/Default";
-import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
 
 export interface PeerMeta {
   name: string;
   url: string;
 }
 
-const HomePage: NextPage = () => {
-  const { contractWalletAddress, contractWalletBalanceInEthereum, contractWalletBalanceInArbitrum } =
-    useAccountAbstraction();
-
+const SwapPage: NextPage = () => {
   return (
     <DefaultLayout>
       <Stack spacing="8">
         <Stack spacing="4">
           <Stack spacing="2">
             <Text fontSize={"xl"} fontWeight="bold">
-              AASwapGate
+              Swap with Hop
             </Text>
             <FormControl>
               <FormLabel fontSize="md" fontWeight="bold">
-                Address
+                Account Type
               </FormLabel>
-              <Text fontSize="xs">{contractWalletAddress || "not connected"}</Text>
             </FormControl>
             <FormControl>
               <FormLabel fontSize="md" fontWeight="bold">
-                Balance in Ethereum
+                Bridging Token
               </FormLabel>
-              <Text fontSize="xs">{contractWalletBalanceInEthereum} ETH</Text>
             </FormControl>
             <FormControl>
               <FormLabel fontSize="md" fontWeight="bold">
-                Balance in Arbitrum
+                Receiving Token (Optional)
               </FormLabel>
-              <Text fontSize="xs">{contractWalletBalanceInArbitrum} ETH</Text>
+            </FormControl>
+            <FormControl>
+              <FormLabel fontSize="md" fontWeight="bold">
+                Source Chain
+              </FormLabel>
+            </FormControl>
+            <FormControl>
+              <FormLabel fontSize="md" fontWeight="bold">
+                Destination Chain
+              </FormLabel>
+            </FormControl>
+            <FormControl>
+              <FormLabel fontSize="md" fontWeight="bold">
+                Amount
+              </FormLabel>
+            </FormControl>
+            <FormControl>
+              <FormLabel fontSize="md" fontWeight="bold">
+                Recipient
+              </FormLabel>
             </FormControl>
           </Stack>
         </Stack>
@@ -48,4 +61,4 @@ const HomePage: NextPage = () => {
   );
 };
 
-export default HomePage;
+export default SwapPage;

@@ -6,6 +6,7 @@ import { useNetwork, useSigner } from "wagmi";
 
 import deployments from "../../../contracts/deployments.json";
 import { AccountAbstractionWalletAPI } from "../../../contracts/lib/AccountAbstractionWalletAPI";
+import rpcs from "../../../contracts/rpcs.json";
 
 export const useAccountAbstraction = () => {
   const { data: signer } = useSigner();
@@ -14,7 +15,8 @@ export const useAccountAbstraction = () => {
 
   const [contractWalletAPI, setContractWalletAPI] = useState<AccountAbstractionWalletAPI>();
   const [contractWalletAddress, setContractWalletAddress] = useState("");
-  const [contractWalletBalance, setContractWalletBalance] = useState("0.0");
+  const [contractWalletBalanceInEthereum, setContractWalletBalanceInEthereum] = useState("0.0");
+  const [contractWalletBalanceInArbitrum, setContractWalletBalanceInArbitrum] = useState("0.0");
 
   const signAndSendTxWithBundler = async (target: string, data: string, value: string) => {
     if (!contractWalletAPI || !chain) {
@@ -43,9 +45,17 @@ export const useAccountAbstraction = () => {
         setContractWalletAddress("");
         return;
       }
-
+      const ethereumProvider = new ethers.providers.JsonRpcProvider(rpcs.goerli);
+      const arbitrumProvider = new ethers.providers.JsonRpcProvider(rpcs["arbitrum-goerli"]);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const provider = signer.provider!;
+      let provider: ethers.providers.Provider;
+      if (chain.id === 5) {
+        provider = ethereumProvider;
+      } else if (chain.id === 421613) {
+        provider = arbitrumProvider;
+      } else {
+        throw Error("Network in invalid");
+      }
       const owner = signer;
       const contractWalletAPI = new AccountAbstractionWalletAPI({
         provider,
@@ -56,11 +66,20 @@ export const useAccountAbstraction = () => {
       setContractWalletAPI(contractWalletAPI);
       const contractWalletAddress = await contractWalletAPI.getWalletAddress();
       setContractWalletAddress(contractWalletAddress);
-      const contractWalletBalanceBigNumber = await provider.getBalance(contractWalletAddress);
-      const contractWalletBalance = ethers.utils.formatEther(contractWalletBalanceBigNumber);
-      setContractWalletBalance(contractWalletBalance);
+      const contractWalletBalanceInEthereumBigNumber = await ethereumProvider.getBalance(contractWalletAddress);
+      const contractWalletBalanceInEthereum = ethers.utils.formatEther(contractWalletBalanceInEthereumBigNumber);
+      setContractWalletBalanceInEthereum(contractWalletBalanceInEthereum);
+      const contractWalletBalanceInArbitrumBigNumber = await arbitrumProvider.getBalance(contractWalletAddress);
+      const contractWalletBalanceInArbitrum = ethers.utils.formatEther(contractWalletBalanceInArbitrumBigNumber);
+      setContractWalletBalanceInArbitrum(contractWalletBalanceInArbitrum);
     })();
   }, [signer, chain]);
 
-  return { contractWalletAPI, contractWalletAddress, contractWalletBalance, signAndSendTxWithBundler };
+  return {
+    contractWalletAPI,
+    contractWalletAddress,
+    contractWalletBalanceInEthereum,
+    contractWalletBalanceInArbitrum,
+    signAndSendTxWithBundler,
+  };
 };

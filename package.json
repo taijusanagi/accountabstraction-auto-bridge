@@ -1,5 +1,5 @@
 {
-  "name": "aa-connect",
+  "name": "aa-auto-bridge",
   "version": "0.0.1",
   "license": "MIT",
   "private": true,
@@ -12,12 +12,13 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "run-p dev:*",
-    "dev:app": "yarn workspace @aa-connect/app dev",
+    "dev:app": "yarn workspace @aaa-bridge/app dev",
     "dev:bundler": "yarn workspace @account-abstraction/bundler hardhat-compile && run-p dev:bundler:*",
     "dev:bundler:ethereum-goerli": "yarn workspace @account-abstraction/bundler bundler --port 3001 --network goerli --mnemonic ../../../../mnemonic.txt --entryPoint 0xfad031b3dbd8048d6f84ae16831d9e27430fe555",
     "dev:bundler:arbitrum-goerli": "yarn workspace @account-abstraction/bundler bundler --port 3002 --network https://white-holy-snowflake.arbitrum-goerli.discover.quiknode.pro/efc6175cfe9ac7459d93f211cdfbbda8087ea401 --mnemonic ../../../../mnemonic.txt --entryPoint 0xfad031b3dbd8048d6f84ae16831d9e27430fe555",
+    "prebuild": "yarn workspace @aaa-bridge/contracts build",
     "build": "run-p build:*",
-    "build:app": "yarn workspace @aa-connect/app build"
+    "build:app": "yarn workspace @aaa-bridge/app build"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",

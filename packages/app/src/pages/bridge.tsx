@@ -1,8 +1,10 @@
 /* eslint-disable camelcase */
 
 import { Button, FormControl, FormLabel, Input, Select, Stack, Text } from "@chakra-ui/react";
+import { Chain, Hop } from "@hop-protocol/sdk";
 import { NextPage } from "next";
 import React, { useState } from "react";
+import { useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
@@ -15,10 +17,12 @@ export interface PeerMeta {
 }
 
 const BridgePage: NextPage = () => {
-  const { signerAddress, contractWalletAddress } = useAccountAbstraction();
+  const { data: signer } = useSigner();
 
-  const [sourceChain, setSourceChain] = useState("ethereum");
-  const [destinationChain, setDestinationChain] = useState("arbitrum");
+  const { signerAddress, contractWalletAddress, contractWalletAPI } = useAccountAbstraction();
+
+  const [sourceChain, setSourceChain] = useState("arbitrum");
+  const [destinationChain, setDestinationChain] = useState("ethereum");
   const [sendFrom, setSendFrom] = useState("eoa");
   const [sendTo, setSendTo] = useState("eoa");
   const [bridgingToken, setBridgingToken] = useState("ETH");
@@ -26,15 +30,59 @@ const BridgePage: NextPage = () => {
 
   const [amount, setAmount] = useState("0.01");
 
-  const bridge = () => {
-    console.log(sourceChain);
-    console.log(destinationChain);
-    console.log(sendFrom);
-    console.log(bridgingToken);
-    console.log(receivingToken);
+  const bridge = async () => {
+    if (!signer || !contractWalletAPI) {
+      return;
+    }
 
-    console.log(amount);
-    console.log(sendTo);
+    if (sendFrom === "eoa") {
+      const hop = new Hop("goerli", signer);
+      const bridge = hop.connect(signer).bridge(bridgingToken);
+      const sourceChainForBridge = sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum;
+      const destinationChainForBridge = destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum;
+      if (sendTo === "eoa") {
+        if (bridgingToken === receivingToken) {
+          const amountBn = bridge.parseUnits(amount);
+          const bridgeTx = await bridge.send(amountBn, sourceChainForBridge, destinationChainForBridge);
+          await bridgeTx.wait();
+          console.log(bridgeTx.hash);
+        } else {
+          // generate userOp
+          //  - swap token
+
+          //  - send to eoa
+          // contractWalletAPI.createUnsignedUserOp({ target: signerAddress, data: "" });
+
+          const options = {
+            recipient: contractWalletAddress,
+          };
+          const tx = await bridge.send(
+            amount,
+            sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            options
+          );
+          console.log(tx.hash);
+        }
+      } else {
+        if (bridgingToken === receivingToken) {
+          const options = {
+            recipient: contractWalletAddress,
+          };
+          const tx = await bridge.send(
+            amount,
+            sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            options
+          );
+          console.log(tx.hash);
+        } else {
+          throw Error("not implemented");
+        }
+      }
+    } else {
+      throw Error("not implemented");
+    }
   };
 
   const swapChain = () => {
@@ -51,10 +99,10 @@ const BridgePage: NextPage = () => {
               Bridge with Auto-Swap
             </Text>
             <Text fontSize={"xs"} color="gray.600">
-              * Bridge is implemented with Hop Protocol
+              * Hop Protocol: Arbitrum to Ethereum Bridge is implemented for fast bridge
             </Text>
             <Text fontSize={"xs"} color="gray.600">
-              * Auto-Swap is implemented with GMX
+              * Only ETH to ETH / USDC is implemented due to liquidity issue
             </Text>
           </Stack>
           <Stack spacing="2">
@@ -63,7 +111,9 @@ const BridgePage: NextPage = () => {
                 Source Chain
               </FormLabel>
               <Select onChange={swapChain} value={sourceChain} fontSize="sm">
-                <option value="ethereum">Ethereum Goerli</option>
+                <option value="ethereum" disabled>
+                  Ethereum Goerli
+                </option>
                 <option value="arbitrum">Arbitrum Goerli</option>
               </Select>
             </FormControl>
@@ -73,7 +123,9 @@ const BridgePage: NextPage = () => {
               </FormLabel>
               <Select onChange={swapChain} value={destinationChain} fontSize="sm">
                 <option value="ethereum">Ethereum Goerli</option>
-                <option value="arbitrum">Arbitrum Goerli</option>
+                <option value="arbitrum" disabled>
+                  Arbitrum Goerli
+                </option>
               </Select>
             </FormControl>
             <FormControl>
@@ -100,8 +152,9 @@ const BridgePage: NextPage = () => {
               </FormLabel>
               <Select onChange={(e) => setBridgingToken(e.target.value)} value={bridgingToken} fontSize="sm">
                 <option value="ETH">ETH</option>
-                <option value="DAI">DAI</option>
-                <option value="USDC">USDC</option>
+                <option value="USDC" disabled>
+                  USDC
+                </option>
               </Select>
             </FormControl>
             <FormControl>
@@ -110,7 +163,6 @@ const BridgePage: NextPage = () => {
               </FormLabel>
               <Select onChange={(e) => setReceivingToken(e.target.value)} value={receivingToken} fontSize="sm">
                 <option value="ETH">ETH</option>
-                <option value="DAI">DAI</option>
                 <option value="USDC">USDC</option>
               </Select>
             </FormControl>

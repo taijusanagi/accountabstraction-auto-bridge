@@ -7,23 +7,63 @@ import { EntryPoint, EntryPoint__factory, UserOperationStruct } from "@account-a
 import { SimpleWalletAPI } from "@account-abstraction/sdk";
 import { rethrowError } from "@account-abstraction/utils";
 import { SampleRecipient, SampleRecipient__factory } from "@account-abstraction/utils/dist/src/types";
-import { Hop } from "@hop-protocol/sdk";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Token } from "@uniswap/sdk-core";
+import { abi as IUniswapV3PoolABI } from "@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json";
+import { nearestUsableTick, Pool, Position } from "@uniswap/v3-sdk";
 import { expect } from "chai";
+import { BigNumber, constants } from "ethers";
 import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 
 import { AccountAbstractionWalletAPI } from "../lib/AccountAbstractionWalletAPI";
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
-import { AccountAbstractionWalletDeployer__factory } from "../typechain-types";
+import {
+  AccountAbstractionWalletDeployer__factory,
+  IMockERC20__factory,
+  INonfungiblePositionManager__factory,
+  ISwapRouter__factory,
+  IUniswapV3Factory__factory,
+} from "../typechain-types";
+import { encodePriceSqrt, FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS } from "./helper/uniswap";
 
 const provider = ethers.provider;
+
+// for uniswap integration
+const uniswapSwapRouterAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+const uniswapV3FactoryAddress = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
+const nonfungiblePositionManager = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88";
+
+// https://github.com/hop-protocol/contracts/blob/master/config/constants.ts#L163
+const usdcAddress = "0x98339D8C260052B7ad81c28c16C0b98420f2B46a";
+const daiAddress = "0xC61bA16e864eFbd06a9fe30Aab39D18B8F63710a";
+
+interface Immutables {
+  factory: string;
+  token0: string;
+  token1: string;
+  fee: number;
+  tickSpacing: number;
+  maxLiquidityPerTick: BigNumber;
+}
+
+interface State {
+  liquidity: BigNumber;
+  sqrtPriceX96: BigNumber;
+  tick: number;
+  observationIndex: number;
+  observationCardinality: number;
+  observationCardinalityNext: number;
+  feeProtocol: number;
+  unlocked: boolean;
+}
 
 describe("AccountAbstractionWallet", () => {
   let signer: SignerWithAddress;
   let owner: SignerWithAddress;
-  let api: SimpleWalletAPI;
+
+  let api: AccountAbstractionWalletAPI;
   let entryPoint: EntryPoint;
   let beneficiary: string;
   let recipient: SampleRecipient;
@@ -133,6 +173,45 @@ describe("AccountAbstractionWallet", () => {
         const salt = 0;
         const calculatedAddress = await factory.getCreate2Address(entryPoint.address, owner.address, salt);
         expect(walletAddress).to.eq(calculatedAddress);
+      });
+
+      it.skip("integrating with uniswap", async function () {
+        const swapRouter = ISwapRouter__factory.connect(uniswapSwapRouterAddress, signer);
+        const v3Factory = IUniswapV3Factory__factory.connect(uniswapV3FactoryAddress, signer);
+        const usdc = IMockERC20__factory.connect(usdcAddress, signer);
+        const dai = IMockERC20__factory.connect(daiAddress, signer);
+        const nft = INonfungiblePositionManager__factory.connect(nonfungiblePositionManager, signer);
+
+        const fee = 3000;
+
+        const usdcMintAmmount = "1000000000000"; // 1000000 USDC (decimals = 6)
+        await usdc.mint(signer.address, usdcMintAmmount);
+
+        const daiMintAmmount = "1000000000000000000000000"; // 1000000 DAI (decimals = 18)
+        await dai.mint(signer.address, daiMintAmmount);
+
+        await v3Factory
+          .createPool(usdcAddress, daiAddress, FeeAmount.MEDIUM)
+          .catch(() => console.log("pool already created"));
+
+        const blockNumber = await provider.getBlockNumber();
+        const block = await provider.getBlock(blockNumber);
+        console.log(block);
+
+        const liquidityParams = {
+          token0: usdcAddress,
+          token1: daiAddress,
+          fee: FeeAmount.MEDIUM,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: signer.address,
+          amount0Desired: 1000000,
+          amount1Desired: 1000000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: blockNumber + 10000,
+        };
+        await nft.mint(liquidityParams);
       });
     });
   });

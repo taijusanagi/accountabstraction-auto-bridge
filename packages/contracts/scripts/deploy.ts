@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { EntryPoint__factory } from "@account-abstraction/contracts";
 import fs from "fs";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import path from "path";
 
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";

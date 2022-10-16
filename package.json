@@ -11,7 +11,6 @@
   },
   "scripts": {
     "prepare": "husky install",
-    "format": "prettier '**/*.{json,md}' --ignore-path .gitignore --write",
     "dev": "run-p dev:*",
     "dev:app": "yarn workspace @aa-connect/app dev",
     "dev:bundler": "yarn workspace @account-abstraction/bundler hardhat-compile && run-p dev:bundler:*",
@@ -31,5 +30,8 @@
   "lint-staged": {
     "*.{md,json}": "prettier --write",
     "*.{ts,tsx,js,jsx}": "eslint --cache --fix"
+  },
+  "resolutions": {
+    "@openzeppelin/contracts": "4.7.3"
   }
 }

@@ -14,7 +14,14 @@ export const accounts = process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [proces
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.15",
+    compilers: [
+      {
+        version: "0.7.6",
+      },
+      {
+        version: "0.8.15",
+      },
+    ],
     settings: {
       optimizer: {
         enabled: true,

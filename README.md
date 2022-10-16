@@ -4,6 +4,26 @@
 
 https://docs.google.com/presentation/d/10g0g-fu50OWloK0maTYXyX4yMTOuGjWTDVE7-nEEkvc/edit#slide=id.ge77df665bb_0_14
 
+## How it works
+
+![how-it-works](./docs/how-it-works.png)
+
+1. AccountAbstraction wallet factory enables to have same contract wallet address in each chain
+
+2. Users create userOp for swapping token and send them to the original EOA in the destination chain. This is used after bridging
+
+3. Set the AccountAbstraction wallet as the recipient when doing bridge with Hop Protocol
+
+4. After bridging, the contract wallet is funded, and the userOp created step-2 can be sent to under
+
+5. The fund is moved to the user's EOA in the destination chain
+
+## Screenshot
+
+Auto swap Bridge with Hop Protocol
+
+![how-it-works](./docs/screenshot.png)
+
 ## Bounties
 
 ### Hop - Bounty #2

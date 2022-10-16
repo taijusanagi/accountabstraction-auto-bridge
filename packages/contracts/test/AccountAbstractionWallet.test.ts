@@ -11,13 +11,13 @@ import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Token } from "@uniswap/sdk-core";
 import { abi as IUniswapV3PoolABI } from "@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json";
-import { nearestUsableTick, Pool, Position } from "@uniswap/v3-sdk";
 import { expect } from "chai";
-import { BigNumber, constants } from "ethers";
+import { BigNumber } from "ethers";
 import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 
 import { AccountAbstractionWalletAPI } from "../lib/AccountAbstractionWalletAPI";
+import { daiInGoerli, mockUSDCRate, usdcInGoerli } from "../lib/data";
 import { DeterministicDeployer } from "../lib/infinitism/DeterministicDeployer";
 import {
   AccountAbstractionWalletDeployer__factory,
@@ -25,8 +25,9 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
   IUniswapV3Factory__factory,
+  MockSwap__factory,
 } from "../typechain-types";
-import { encodePriceSqrt, FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS } from "./helper/uniswap";
+import { FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS } from "./helper/uniswap";
 
 const provider = ethers.provider;
 
@@ -36,8 +37,8 @@ const uniswapV3FactoryAddress = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
 const nonfungiblePositionManager = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88";
 
 // https://github.com/hop-protocol/contracts/blob/master/config/constants.ts#L163
-const usdcAddress = "0x98339D8C260052B7ad81c28c16C0b98420f2B46a";
-const daiAddress = "0xC61bA16e864eFbd06a9fe30Aab39D18B8F63710a";
+const usdcAddress = usdcInGoerli;
+const daiAddress = daiInGoerli;
 
 interface Immutables {
   factory: string;
@@ -175,14 +176,14 @@ describe("AccountAbstractionWallet", () => {
         expect(walletAddress).to.eq(calculatedAddress);
       });
 
-      it.skip("integrating with uniswap", async function () {
+      it("integrating with uniswap", async function () {
         const swapRouter = ISwapRouter__factory.connect(uniswapSwapRouterAddress, signer);
         const v3Factory = IUniswapV3Factory__factory.connect(uniswapV3FactoryAddress, signer);
         const usdc = IMockERC20__factory.connect(usdcAddress, signer);
         const dai = IMockERC20__factory.connect(daiAddress, signer);
         const nft = INonfungiblePositionManager__factory.connect(nonfungiblePositionManager, signer);
 
-        const fee = 3000;
+        const poolFee = 3000;
 
         const usdcMintAmmount = "1000000000000"; // 1000000 USDC (decimals = 6)
         await usdc.mint(signer.address, usdcMintAmmount);
@@ -194,9 +195,58 @@ describe("AccountAbstractionWallet", () => {
           .createPool(usdcAddress, daiAddress, FeeAmount.MEDIUM)
           .catch(() => console.log("pool already created"));
 
+        const poolAddress = await v3Factory.getPool(usdcAddress, daiAddress, poolFee);
+        const poolContract = new ethers.Contract(poolAddress, IUniswapV3PoolABI, signer);
+        const [factory, token0, token1, fee, tickSpacing, maxLiquidityPerTick] = await Promise.all([
+          poolContract.factory(),
+          poolContract.token0(),
+          poolContract.token1(),
+          poolContract.fee(),
+          poolContract.tickSpacing(),
+          poolContract.maxLiquidityPerTick(),
+        ]);
+
+        const immutables: Immutables = {
+          factory,
+          token0,
+          token1,
+          fee,
+          tickSpacing,
+          maxLiquidityPerTick,
+        };
+
+        const [liquidity, slot] = await Promise.all([poolContract.liquidity(), poolContract.slot0()]);
+
+        const state: State = {
+          liquidity,
+          sqrtPriceX96: slot[0],
+          tick: slot[1],
+          observationIndex: slot[2],
+          observationCardinality: slot[3],
+          observationCardinalityNext: slot[4],
+          feeProtocol: slot[5],
+          unlocked: slot[6],
+        };
+
+        // console.log(immutables);
+        // console.log(state);
+
+        const USDC = new Token(3, usdcAddress, 6, "USDC", "USD Coin");
+        const DAI = new Token(3, daiAddress, 18, "DAI", "Dai Stablecoin");
+
+        // this is not working
+        // const USDC_DAI_POOL = new Pool(
+        //   USDC,
+        //   DAI,
+        //   immutables.fee,
+        //   state.sqrtPriceX96.toString(),
+        //   state.liquidity.toString(),
+        //   state.tick
+        // );
+
         const blockNumber = await provider.getBlockNumber();
         const block = await provider.getBlock(blockNumber);
-        console.log(block);
+        // console.log(block);
 
         const liquidityParams = {
           token0: usdcAddress,
@@ -211,7 +261,38 @@ describe("AccountAbstractionWallet", () => {
           amount1Min: 0,
           deadline: blockNumber + 10000,
         };
-        await nft.mint(liquidityParams);
+
+        // this is not working
+        // await nft.mint(liquidityParams);
+      });
+
+      it("integrate with mock swap", async function () {
+        const MockSwap = await ethers.getContractFactory("MockSwap");
+        const mockSwap = await MockSwap.deploy(usdcInGoerli, mockUSDCRate);
+        const amountIn = 100;
+        const amountOut = await mockSwap.getOutputAmount(amountIn);
+        const usdc = IMockERC20__factory.connect(usdcInGoerli, signer);
+        const previouBalance = await usdc.balanceOf(signer.address);
+        await mockSwap.swap({ value: amountIn });
+        const currentBalance = await usdc.balanceOf(signer.address);
+        expect(currentBalance).to.eq(previouBalance.add(amountOut));
+      });
+
+      it("integrate with mock swap with aa", async function () {
+        const MockSwap = await ethers.getContractFactory("MockSwap");
+        const mockSwap = await MockSwap.deploy(usdcInGoerli, mockUSDCRate);
+        const amountIn = 100;
+        const amountOut = await mockSwap.getOutputAmount(amountIn);
+        const usdc = IMockERC20__factory.connect(usdcInGoerli, signer);
+        const previouBalance = await usdc.balanceOf(walletAddress);
+        const op = await api.createSignedUserOp({
+          target: mockSwap.address,
+          data: mockSwap.interface.encodeFunctionData("swap"),
+          value: amountIn,
+        });
+        await entryPoint.handleOps([op], beneficiary);
+        const currentBalance = await usdc.balanceOf(walletAddress);
+        expect(currentBalance).to.eq(previouBalance.add(amountOut));
       });
     });
   });

@@ -1,9 +1,11 @@
 /* eslint-disable camelcase */
 import { ethers } from "hardhat";
 
+import { mockUSDCRate, usdcInGoerli } from "../lib/data";
+
 async function main() {
   const MockSwap = await ethers.getContractFactory("MockSwap");
-  const mockSwap = await MockSwap.deploy("0x98339D8C260052B7ad81c28c16C0b98420f2B46a", 1228);
+  const mockSwap = await MockSwap.deploy(usdcInGoerli, mockUSDCRate);
   console.log(mockSwap.address);
 }
 

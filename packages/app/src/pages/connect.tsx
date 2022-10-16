@@ -106,6 +106,9 @@ const HomePage: NextPage = () => {
               Connect with dApp
             </Text>
             <Text fontSize={"xs"} color="gray.600">
+              * Should run bundler in localhost to demo
+            </Text>
+            <Text fontSize={"xs"} color="gray.600">
               * AA wallet will be connected to the dApp.
             </Text>
             <Text fontSize={"xs"} color="gray.600">

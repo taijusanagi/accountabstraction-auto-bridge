@@ -140,6 +140,9 @@ const BridgePage: NextPage = () => {
               Bridge with Auto-Swap
             </Text>
             <Text fontSize={"xs"} color="gray.600">
+              * Should run bundler in localhost to demo
+            </Text>
+            <Text fontSize={"xs"} color="gray.600">
               * Hop Protocol: Arbitrum to Ethereum Bridge is implemented for fast bridge
             </Text>
             <Text fontSize={"xs"} color="gray.600">

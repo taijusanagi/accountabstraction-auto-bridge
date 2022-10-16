@@ -64,6 +64,9 @@ const HomePage: NextPage = () => {
               AA Bridge
             </Text>
             <Text fontSize={"xs"} color="gray.600">
+              * Should run bundler in localhost to demo
+            </Text>
+            <Text fontSize={"xs"} color="gray.600">
               * AA wallet address is calculated by create2.
             </Text>
             <Text fontSize={"xs"} color="gray.600">

@@ -18,6 +18,12 @@ const HomePage: NextPage = () => {
 
   const [storedOp, setStoredOp] = useState<StoredOp>();
 
+  const clear = async () => {
+    window.localStorage.clear();
+    setStoredOp(undefined);
+  };
+
+  // this has issue when storing in local storage
   const sendOp = async () => {
     if (!storedOp) {
       return;
@@ -32,9 +38,8 @@ const HomePage: NextPage = () => {
     }
 
     const result = await httpRpcClient.sendUserOpToBundler(storedOp.op);
-    window.localStorage.clear();
-    setStoredOp(undefined);
     console.log(result);
+    clear();
   };
 
   useEffect(() => {
@@ -102,9 +107,14 @@ const HomePage: NextPage = () => {
                 <Text fontSize="xs">Amout: {storedOp.amount} ETH</Text>
                 <Text fontSize="xs">Receiving Token: {storedOp.receivingToken}</Text>
               </FormControl>
-              <Button w="full" onClick={sendOp} colorScheme="brand">
-                Execute
-              </Button>
+              <Stack spacing="2">
+                <Button w="full" onClick={sendOp} colorScheme="brand">
+                  Execute
+                </Button>
+                <Button w="full" onClick={clear}>
+                  Clear
+                </Button>
+              </Stack>
             </Stack>
           )}
         </Stack>

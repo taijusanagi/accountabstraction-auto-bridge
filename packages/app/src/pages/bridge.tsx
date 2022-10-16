@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
+
 import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient";
 import { Button, FormControl, FormLabel, Input, Select, Stack, Text } from "@chakra-ui/react";
 import { Chain, Hop } from "@hop-protocol/sdk";
 import { NextPage } from "next";
 import React, { useState } from "react";
-import { useSigner } from "wagmi";
+import { useNetwork, useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
@@ -16,9 +17,12 @@ import { truncate } from "../lib/utils";
 
 const BridgePage: NextPage = () => {
   const { data: signer } = useSigner();
+  const { chain } = useNetwork();
+
   const { signerAddress, contractWalletAddress, contractWalletAPI, signAndSendTxWithBundler } = useAccountAbstraction();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isBridgeLoading, setIsBridgeLoading] = useState(false);
+  const [isCreateOpLoading, setIsCreateOpLoading] = useState(false);
   const [sourceChain, setSourceChain] = useState("arbitrum");
   const [destinationChain, setDestinationChain] = useState("ethereum");
   const [sendFrom, setSendFrom] = useState("eoa");
@@ -28,50 +32,73 @@ const BridgePage: NextPage = () => {
 
   const [amount, setAmount] = useState("0");
 
-  const bridge = async () => {
-    if (!signer || !contractWalletAPI) {
+  const createOp = async () => {
+    if (!signer || !contractWalletAPI || !chain) {
       return;
     }
+
+    if (chain.id !== 5) {
+      alert("Please connect Goerli");
+    }
     try {
-      setIsLoading(true);
-      // this is mock for demo
-      // this is temp implementation so it is hard-coded
+      setIsCreateOpLoading(true);
+      const hop = new Hop("goerli", signer);
+      const bridge = hop.connect(signer).bridge(bridgingToken);
+      const amountBn = bridge.parseUnits(amount);
+
       const mockSwapAddressInGoerli = "0x51B41A0112657f9530AaE72F1D50BCcD3D0D8Cff";
       const mockSwap = MockSwap__factory.connect(mockSwapAddressInGoerli, signer);
+      const receipient = await signer.getAddress();
+      const op = await contractWalletAPI.createSignedUserOp({
+        target: mockSwap.address,
+        data: mockSwap.interface.encodeFunctionData("swap", [receipient]),
+        value: amountBn,
+      });
+      const chainId = destinationChain === "ethereum" ? 5 : 421613;
+      const storedOp: StoredOp = { op, amount, chainId, receivingToken };
+      window.localStorage.setItem("ops", JSON.stringify(storedOp));
+      const httpRpcClient = new HttpRpcClient("http://localhost:3001/rpc", deployments.entryPoint, 5);
+      const result = await httpRpcClient.sendUserOpToBundler(storedOp.op);
+      console.log(result);
+      window.localStorage.clear();
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsCreateOpLoading(false);
+    }
+  };
+
+  const bridge = async () => {
+    if (!signer || !contractWalletAPI || !chain) {
+      return;
+    }
+    if (chain.id !== 421613) {
+      alert("Please connect Arbitrum Goerli Testnet");
+    }
+
+    try {
+      setIsBridgeLoading(true);
+      // this is mock for demo
+      // this is temp implementation so it is hard-coded
       if (sendFrom === "eoa") {
         const hop = new Hop("goerli", signer);
         const bridge = hop.connect(signer).bridge(bridgingToken);
         const sourceChainForBridge = sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum;
         const destinationChainForBridge = destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum;
         const amountBn = bridge.parseUnits(amount);
-        console.log(amountBn.toString());
         if (sendTo === "eoa") {
           if (bridgingToken === receivingToken) {
             const bridgeTx = await bridge.send(amountBn, sourceChainForBridge, destinationChainForBridge);
             await bridgeTx.wait();
             console.log(bridgeTx.hash);
           } else {
-            const receipient = await signer.getAddress();
-            const op = await contractWalletAPI.createSignedUserOp({
-              target: mockSwap.address,
-              data: mockSwap.interface.encodeFunctionData("swap", [receipient]),
-              value: amountBn,
-              gasLimit: 128609,
-            });
-
-            // const chainId = destinationChain === "ethereum" ? 5 : 421613;
-            // const storedOp: StoredOp = { op, amount, chainId, receivingToken };
-            // window.localStorage.setItem("ops", JSON.stringify(storedOp));
-            // const options = {
-            //   recipient: contractWalletAddress,
-            // };
-            // const bridgeTx = await bridge.send(amountBn, sourceChainForBridge, destinationChainForBridge, options);
-            // await bridgeTx.wait();
-            // console.log(bridgeTx.hash);
-
-            const httpRpcClient = new HttpRpcClient("http://localhost:3001/rpc", deployments.entryPoint, 5);
-            const result = await httpRpcClient.sendUserOpToBundler(op);
-            console.log(result);
+            const options = {
+              recipient: contractWalletAddress,
+            };
+            const bridgeTx = await bridge.send(amountBn, sourceChainForBridge, destinationChainForBridge, options);
+            await bridgeTx.wait();
+            console.log(bridgeTx.hash);
+            alert("please switch to Goerli, then create userOp for Account Abstraction Tx");
           }
         } else {
           if (bridgingToken === receivingToken) {
@@ -95,7 +122,7 @@ const BridgePage: NextPage = () => {
     } catch (e) {
       console.log(e);
     } finally {
-      setIsLoading(false);
+      setIsBridgeLoading(false);
     }
   };
 
@@ -188,8 +215,23 @@ const BridgePage: NextPage = () => {
               </FormLabel>
               <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </FormControl>
-            <Button w="full" onClick={bridge} colorScheme="brand" isLoading={isLoading}>
+            <Button
+              w="full"
+              onClick={bridge}
+              colorScheme="brand"
+              isLoading={isBridgeLoading}
+              isDisabled={chain?.id !== 421613}
+            >
               Bridge
+            </Button>
+            <Button
+              w="full"
+              onClick={createOp}
+              colorScheme="brand"
+              isLoading={isCreateOpLoading}
+              isDisabled={chain?.id !== 5 || bridgingToken === receivingToken}
+            >
+              Create Swap userOp
             </Button>
           </Stack>
         </Stack>

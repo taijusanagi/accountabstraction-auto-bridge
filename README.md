@@ -1,5 +1,9 @@
 # Account Abstraction Connect
 
+## Pitch Deck
+
+https://docs.google.com/presentation/d/10g0g-fu50OWloK0maTYXyX4yMTOuGjWTDVE7-nEEkvc/edit#slide=id.ge77df665bb_0_14
+
 ## Bounties
 
 ### Hop - Bounty #2

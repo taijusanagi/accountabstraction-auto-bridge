@@ -98,7 +98,7 @@ const BridgePage: NextPage = () => {
             const bridgeTx = await bridge.send(amountBn, sourceChainForBridge, destinationChainForBridge, options);
             await bridgeTx.wait();
             console.log(bridgeTx.hash);
-            alert("please switch to Goerli, then create userOp for Account Abstraction Tx");
+            alert("Please switch to Goerli, then create userOp for Account Abstraction Tx (not automated yet)");
           }
         } else {
           if (bridgingToken === receivingToken) {

@@ -9,12 +9,15 @@ import { useSigner } from "wagmi";
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
 
+import { MockSwap__factory } from "../../../contracts/typechain-types";
 import { truncate } from "../lib/utils";
 
 export interface PeerMeta {
   name: string;
   url: string;
 }
+
+const mockSwapAddressInGoerli = "0xf8291F1873ae0383edE04861271e0627f8229a44";
 
 const BridgePage: NextPage = () => {
   const { data: signer } = useSigner();

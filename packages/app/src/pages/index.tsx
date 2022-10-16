@@ -1,19 +1,54 @@
-/* eslint-disable camelcase */
-
-import { FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
+import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient";
+import { Button, FormControl, FormLabel, Stack, Text } from "@chakra-ui/react";
 import { NextPage } from "next";
+import { useEffect, useState } from "react";
+import { useNetwork } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
+import { StoredOp } from "@/types/op";
 
-export interface PeerMeta {
-  name: string;
-  url: string;
-}
+import deployments from "../../../contracts/deployments.json";
 
 const HomePage: NextPage = () => {
   const { contractWalletAddress, contractWalletBalanceInEthereum, contractWalletBalanceInArbitrum } =
     useAccountAbstraction();
+
+  const { chain } = useNetwork();
+
+  const [storedOp, setStoredOp] = useState<StoredOp>();
+
+  const sendOp = async () => {
+    if (!storedOp) {
+      return;
+    }
+    let httpRpcClient: HttpRpcClient;
+    if (storedOp.chainId === 5) {
+      httpRpcClient = new HttpRpcClient("http://localhost:3001/rpc", deployments.entryPoint, 5);
+    } else if (storedOp.chainId === 421613) {
+      httpRpcClient = new HttpRpcClient("http://localhost:3002/rpc", deployments.entryPoint, 421613);
+    } else {
+      throw Error("Network in invalid");
+    }
+
+    const result = await httpRpcClient.sendUserOpToBundler(storedOp.op);
+    window.localStorage.clear();
+    setStoredOp(undefined);
+    console.log(result);
+  };
+
+  useEffect(() => {
+    if (!chain) {
+      return;
+    }
+    const opInStorage = window.localStorage.getItem("ops");
+    if (opInStorage) {
+      const op = JSON.parse(opInStorage) as StoredOp;
+      if (chain.id === op.chainId) {
+        setStoredOp(op);
+      }
+    }
+  }, [chain]);
 
   return (
     <DefaultLayout>
@@ -50,6 +85,28 @@ const HomePage: NextPage = () => {
               <Text fontSize="xs">{contractWalletBalanceInArbitrum} ETH</Text>
             </FormControl>
           </Stack>
+          {storedOp && (
+            <Stack spacing="4" boxShadow={"base"} borderRadius="2xl" p="8">
+              <Stack spacing="2">
+                <Text fontSize={"xl"} fontWeight="bold">
+                  Pending Ops
+                </Text>
+                <Text fontSize={"xs"} color="gray.600">
+                  * This tx can be sent by anyone safely.
+                </Text>
+                <Text fontSize={"xs"} color="gray.600">
+                  * Manual tx is implemented for the demo.
+                </Text>
+              </Stack>
+              <FormControl>
+                <Text fontSize="xs">Amout: {storedOp.amount} ETH</Text>
+                <Text fontSize="xs">Receiving Token: {storedOp.receivingToken}</Text>
+              </FormControl>
+              <Button w="full" onClick={sendOp} colorScheme="brand">
+                Execute
+              </Button>
+            </Stack>
+          )}
         </Stack>
       </Stack>
     </DefaultLayout>

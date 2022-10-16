@@ -66,6 +66,7 @@ export const useAccountAbstraction = () => {
         owner: signer,
         factoryAddress: deployments.factory,
       });
+
       signer.getAddress().then((signerAddress) => setSignerAddress(signerAddress));
       setContractWalletAPI(contractWalletAPI);
       const contractWalletAddress = await contractWalletAPI.getWalletAddress();

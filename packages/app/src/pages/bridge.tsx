@@ -1,6 +1,4 @@
 /* eslint-disable camelcase */
-
-import { EntryPoint__factory } from "@account-abstraction/contracts";
 import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient";
 import { Button, FormControl, FormLabel, Input, Select, Stack, Text } from "@chakra-ui/react";
 import { Chain, Hop } from "@hop-protocol/sdk";
@@ -10,15 +8,11 @@ import { useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
+import { StoredOp } from "@/types/op";
 
 import deployments from "../../../contracts/deployments.json";
 import { MockSwap__factory } from "../../../contracts/typechain-types";
 import { truncate } from "../lib/utils";
-
-export interface PeerMeta {
-  name: string;
-  url: string;
-}
 
 const BridgePage: NextPage = () => {
   const { data: signer } = useSigner();
@@ -32,7 +26,7 @@ const BridgePage: NextPage = () => {
   const [bridgingToken, setBridgingToken] = useState("ETH");
   const [receivingToken, setReceivingToken] = useState("ETH");
 
-  const [amount, setAmount] = useState("0.001");
+  const [amount, setAmount] = useState("0");
 
   const bridge = async () => {
     if (!signer || !contractWalletAPI) {
@@ -57,20 +51,27 @@ const BridgePage: NextPage = () => {
             await bridgeTx.wait();
             console.log(bridgeTx.hash);
           } else {
+            const receipient = await signer.getAddress();
+            const op = await contractWalletAPI.createSignedUserOp({
+              target: mockSwap.address,
+              data: mockSwap.interface.encodeFunctionData("swap", [receipient]),
+              value: amountBn,
+              gasLimit: 128609,
+            });
+
+            // const chainId = destinationChain === "ethereum" ? 5 : 421613;
+            // const storedOp: StoredOp = { op, amount, chainId, receivingToken };
+            // window.localStorage.setItem("ops", JSON.stringify(storedOp));
             // const options = {
             //   recipient: contractWalletAddress,
             // };
             // const bridgeTx = await bridge.send(amountBn, sourceChainForBridge, destinationChainForBridge, options);
             // await bridgeTx.wait();
             // console.log(bridgeTx.hash);
-            const receipient = await signer.getAddress();
-            const bunderTxHash = await signAndSendTxWithBundler(
-              mockSwap.address,
-              mockSwap.interface.encodeFunctionData("swap", [receipient]),
-              amountBn.toString(),
-              5
-            );
-            console.log(bunderTxHash);
+
+            const httpRpcClient = new HttpRpcClient("http://localhost:3001/rpc", deployments.entryPoint, 5);
+            const result = await httpRpcClient.sendUserOpToBundler(op);
+            console.log(result);
           }
         } else {
           if (bridgingToken === receivingToken) {

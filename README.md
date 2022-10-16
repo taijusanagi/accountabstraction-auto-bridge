@@ -22,7 +22,7 @@ https://docs.google.com/presentation/d/10g0g-fu50OWloK0maTYXyX4yMTOuGjWTDVE7-nEE
 
 Auto swap Bridge with Hop Protocol
 
-![how-it-works](./docs/screenshot.png)
+![screenshot](./docs/sceen-shot.png)
 
 ## Bounties
 

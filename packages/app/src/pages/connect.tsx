@@ -1,8 +1,9 @@
 import { Button, FormControl, FormLabel, Input, Link, Stack, Text } from "@chakra-ui/react";
 import WalletConnect from "@walletconnect/client";
+import { convertHexToUtf8 } from "@walletconnect/utils";
 import { NextPage } from "next";
 import { useState } from "react";
-import { useNetwork } from "wagmi";
+import { useNetwork, useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
@@ -14,7 +15,7 @@ export interface PeerMeta {
 
 const HomePage: NextPage = () => {
   const network = useNetwork();
-
+  const { data: signer } = useSigner();
   const [connector, setConnector] = useState<WalletConnect>();
   const { contractWalletAddress, signAndSendTxWithBundler } = useAccountAbstraction();
 
@@ -55,6 +56,7 @@ const HomePage: NextPage = () => {
       if (error) {
         throw error;
       }
+
       if (payload.method === "eth_sendTransaction") {
         console.log("eth_sendTransaction");
         const tx = await signAndSendTxWithBundler(
@@ -67,8 +69,18 @@ const HomePage: NextPage = () => {
           result: tx,
         });
         console.log("result", result);
-      } else {
-        throw Error("not implemented");
+      } else if (payload.method === "personal_sign") {
+        console.log("personal_sign");
+        const message = convertHexToUtf8(payload.params[0]);
+        console.log("message", message);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const signature = await signer!.signMessage(message);
+        console.log(signature);
+        const result = connector.approveRequest({
+          id: payload.id,
+          result: signature,
+        });
+        console.log("result", result);
       }
     });
 

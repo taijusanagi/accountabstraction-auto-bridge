@@ -13,6 +13,7 @@ export const useAccountAbstraction = () => {
 
   const { chain } = useNetwork();
 
+  const [signerAddress, setSignerAddress] = useState("");
   const [contractWalletAPI, setContractWalletAPI] = useState<AccountAbstractionWalletAPI>();
   const [contractWalletAddress, setContractWalletAddress] = useState("");
   const [contractWalletBalanceInEthereum, setContractWalletBalanceInEthereum] = useState("0.0");
@@ -56,26 +57,29 @@ export const useAccountAbstraction = () => {
       } else {
         throw Error("Network in invalid");
       }
-      const owner = signer;
       const contractWalletAPI = new AccountAbstractionWalletAPI({
         provider,
         entryPointAddress: deployments.entryPoint,
-        owner,
+        owner: signer,
         factoryAddress: deployments.factory,
       });
+      signer.getAddress().then((signerAddress) => setSignerAddress(signerAddress));
       setContractWalletAPI(contractWalletAPI);
       const contractWalletAddress = await contractWalletAPI.getWalletAddress();
       setContractWalletAddress(contractWalletAddress);
-      const contractWalletBalanceInEthereumBigNumber = await ethereumProvider.getBalance(contractWalletAddress);
-      const contractWalletBalanceInEthereum = ethers.utils.formatEther(contractWalletBalanceInEthereumBigNumber);
-      setContractWalletBalanceInEthereum(contractWalletBalanceInEthereum);
-      const contractWalletBalanceInArbitrumBigNumber = await arbitrumProvider.getBalance(contractWalletAddress);
-      const contractWalletBalanceInArbitrum = ethers.utils.formatEther(contractWalletBalanceInArbitrumBigNumber);
-      setContractWalletBalanceInArbitrum(contractWalletBalanceInArbitrum);
+      ethereumProvider.getBalance(contractWalletAddress).then((contractWalletBalanceInEthereumBigNumber) => {
+        const contractWalletBalanceInEthereum = ethers.utils.formatEther(contractWalletBalanceInEthereumBigNumber);
+        setContractWalletBalanceInEthereum(contractWalletBalanceInEthereum);
+      });
+      await arbitrumProvider.getBalance(contractWalletAddress).then((contractWalletBalanceInArbitrumBigNumber) => {
+        const contractWalletBalanceInArbitrum = ethers.utils.formatEther(contractWalletBalanceInArbitrumBigNumber);
+        setContractWalletBalanceInArbitrum(contractWalletBalanceInArbitrum);
+      });
     })();
   }, [signer, chain]);
 
   return {
+    signerAddress,
     contractWalletAPI,
     contractWalletAddress,
     contractWalletBalanceInEthereum,

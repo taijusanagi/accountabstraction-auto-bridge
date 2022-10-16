@@ -1639,7 +1639,7 @@
   dependencies:
     "@hapi/hoek" "^9.0.0"
 
-"@hop-protocol/core@0.0.1-beta.96":
+"@hop-protocol/core@0.0.1-beta.96", "@hop-protocol/core@^0.0.1-beta.96":
   version "0.0.1-beta.96"
   resolved "https://registry.yarnpkg.com/@hop-protocol/core/-/core-0.0.1-beta.96.tgz#a921100055b3d92eac164b2f4c4fb7f2a246dbfe"
   integrity sha512-cqSVvOCJAyVuFpJGrDAN1yzy+bYZOf7gT5J8P4y7Lwbvw2YsZS5sH7elf+z7mGfrDLyChEg6Us/xyNTdqRDN8g==

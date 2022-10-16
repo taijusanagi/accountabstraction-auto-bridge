@@ -16,6 +16,7 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@fontsource/inter": "^4.5.12",
+    "@hop-protocol/core": "^0.0.1-beta.96",
     "@rainbow-me/rainbowkit": "^0.7.1",
     "@walletconnect/client": "^1.8.0",
     "@walletconnect/utils": "^1.8.0",

@@ -1,4 +1,4 @@
-import { Button, FormControl, FormLabel, Input, Stack, Text } from "@chakra-ui/react";
+import { Button, FormControl, FormLabel, Input, Link, Stack, Text } from "@chakra-ui/react";
 import WalletConnect from "@walletconnect/client";
 import { NextPage } from "next";
 import { useState } from "react";
@@ -16,7 +16,7 @@ const HomePage: NextPage = () => {
   const network = useNetwork();
 
   const [connector, setConnector] = useState<WalletConnect>();
-  const { signAndSendTxWithBundler, contractWalletAddress } = useAccountAbstraction();
+  const { contractWalletAddress, signAndSendTxWithBundler } = useAccountAbstraction();
 
   const [walletConnectUri, setWalletConnectUri] = useState("");
   const [walletConnectMode, setWalletConnectMode] = useState<"notConnected" | "connecting" | "connected">(
@@ -101,18 +101,29 @@ const HomePage: NextPage = () => {
     <DefaultLayout>
       <Stack spacing="8">
         <Stack spacing="4">
-          <Text fontSize={"xl"} fontWeight="bold">
-            ConnectApps
-          </Text>
+          <Stack spacing="2">
+            <Text fontSize={"xl"} fontWeight="bold">
+              Connect with dApp
+            </Text>
+            <Text fontSize={"xs"} color="gray.600">
+              * AA wallet will be connected to the dApp.
+            </Text>
+            <Text fontSize={"xs"} color="gray.600">
+              * Demo:{" "}
+              <Link color="blue.600" href="https://example.walletconnect.org/" target={"_blank"}>
+                https://example.walletconnect.org/
+              </Link>
+            </Text>
+          </Stack>
           {walletConnectMode === "notConnected" && (
             <Stack spacing="2">
               <FormControl>
                 <FormLabel>Walelt Connect URL</FormLabel>
                 <Input
                   type="text"
-                  fontSize="xs"
                   value={walletConnectUri}
                   onChange={(e) => setWalletConnectUri(e.target.value)}
+                  fontSize="sm"
                 />
               </FormControl>
               <Button w="full" onClick={connectWalletConnect} colorScheme="brand" isDisabled={!walletConnectUri}>

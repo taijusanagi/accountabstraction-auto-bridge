@@ -21,11 +21,19 @@ const HomePage: NextPage = () => {
         <Stack spacing="4">
           <Stack spacing="2">
             <Text fontSize={"xl"} fontWeight="bold">
-              AASwapGate
+              AA Bridge
             </Text>
+            <Text fontSize={"xs"} color="gray.600">
+              * AA wallet address is calculated by create2.
+            </Text>
+            <Text fontSize={"xs"} color="gray.600">
+              * No previous setting is required to use.
+            </Text>
+          </Stack>
+          <Stack spacing="2">
             <FormControl>
               <FormLabel fontSize="md" fontWeight="bold">
-                Address
+                AA Wallet Address
               </FormLabel>
               <Text fontSize="xs">{contractWalletAddress || "not connected"}</Text>
             </FormControl>

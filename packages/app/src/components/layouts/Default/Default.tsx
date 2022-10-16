@@ -69,7 +69,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
           </Center>
           <Flex justify="space-between" alignItems={"center"} h="8">
             <Text fontSize="lg" fontWeight={"bold"}>
-              AA Bridge
+              AA Auto Bridge
             </Text>
             <HStack>
               <ConnectButton accountStatus={"avatar"} showBalance={false} chainStatus={"name"} />

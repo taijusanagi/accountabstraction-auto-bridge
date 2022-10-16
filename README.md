@@ -1,4 +1,4 @@
-# Account Abstraction Connect
+# Account Abstraction Automated Bridge
 
 ## Pitch Deck
 

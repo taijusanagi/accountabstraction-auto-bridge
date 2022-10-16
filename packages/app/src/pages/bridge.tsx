@@ -1,8 +1,10 @@
 /* eslint-disable camelcase */
 
 import { Button, FormControl, FormLabel, Input, Select, Stack, Text } from "@chakra-ui/react";
+import { Chain, Hop } from "@hop-protocol/sdk";
 import { NextPage } from "next";
 import React, { useState } from "react";
+import { useSigner } from "wagmi";
 
 import { DefaultLayout } from "@/components/layouts/Default";
 import { useAccountAbstraction } from "@/hooks/useAccountAbstraction";
@@ -15,7 +17,9 @@ export interface PeerMeta {
 }
 
 const BridgePage: NextPage = () => {
-  const { signerAddress, contractWalletAddress } = useAccountAbstraction();
+  const { data: signer } = useSigner();
+
+  const { signerAddress, contractWalletAddress, contractWalletAPI } = useAccountAbstraction();
 
   const [sourceChain, setSourceChain] = useState("ethereum");
   const [destinationChain, setDestinationChain] = useState("arbitrum");
@@ -26,15 +30,59 @@ const BridgePage: NextPage = () => {
 
   const [amount, setAmount] = useState("0.01");
 
-  const bridge = () => {
-    console.log(sourceChain);
-    console.log(destinationChain);
-    console.log(sendFrom);
-    console.log(bridgingToken);
-    console.log(receivingToken);
+  const bridge = async () => {
+    if (!signer || !contractWalletAPI) {
+      return;
+    }
 
-    console.log(amount);
-    console.log(sendTo);
+    if (sendFrom === "eoa") {
+      const hop = new Hop("goerli", signer);
+      const bridge = hop.connect(signer).bridge(bridgingToken);
+      if (sendTo === "eoa") {
+        if (bridgingToken === receivingToken) {
+          const tx = await bridge.send(
+            amount,
+            sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum
+          );
+          console.log(tx.hash);
+        } else {
+          // generate userOp
+          //  - swap token
+
+          //  - send to eoa
+          contractWalletAPI.createUnsignedUserOp({ target: signerAddress, data: "" });
+
+          const options = {
+            recipient: contractWalletAddress,
+          };
+          const tx = await bridge.send(
+            amount,
+            sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            options
+          );
+          console.log(tx.hash);
+        }
+      } else {
+        if (bridgingToken === receivingToken) {
+          const options = {
+            recipient: contractWalletAddress,
+          };
+          const tx = await bridge.send(
+            amount,
+            sourceChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            destinationChain === "ethereum" ? Chain.Ethereum : Chain.Arbitrum,
+            options
+          );
+          console.log(tx.hash);
+        } else {
+          throw Error("not implemented");
+        }
+      }
+    } else {
+      throw Error("not implemented");
+    }
   };
 
   const swapChain = () => {

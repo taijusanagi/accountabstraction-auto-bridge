@@ -68,7 +68,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
             bottom={!isDesktop ? "0" : undefined}
             h="8"
           >
-            <ButtonGroup bgColor={"white"} py="1" px="1" rounded="xl" shadow="md" size="xs">
+            {/* <ButtonGroup bgColor={"white"} py="1" px="1" rounded="xl" shadow="md" size="xs">
               <Button onClick={onClickAccount} {...homeButtonProps}>
                 Account
               </Button>
@@ -78,7 +78,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
               <Button onClick={onClickBridge} {...bridgeButtonProps}>
                 Bridge
               </Button>
-            </ButtonGroup>
+            </ButtonGroup> */}
           </Center>
           <Flex justify="space-between" alignItems={"center"} h="8">
             <Text fontSize="lg" fontWeight={"bold"}>

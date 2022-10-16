@@ -19,14 +19,17 @@ export const useAccountAbstraction = () => {
   const [contractWalletBalanceInEthereum, setContractWalletBalanceInEthereum] = useState("0.0");
   const [contractWalletBalanceInArbitrum, setContractWalletBalanceInArbitrum] = useState("0.0");
 
-  const signAndSendTxWithBundler = async (target: string, data: string, value: string) => {
+  const signAndSendTxWithBundler = async (target: string, data: string, value: string, targetChainId?: number) => {
     if (!contractWalletAPI || !chain) {
       return;
     }
+
+    const chainId = targetChainId || chain.id;
     let httpRpcClient: HttpRpcClient;
-    if (chain.id === 5) {
+    console.log(chainId);
+    if (chainId === 5) {
       httpRpcClient = new HttpRpcClient("http://localhost:3001/rpc", deployments.entryPoint, 5);
-    } else if (chain.id === 421613) {
+    } else if (chainId === 421613) {
       httpRpcClient = new HttpRpcClient("http://localhost:3002/rpc", deployments.entryPoint, 421613);
     } else {
       throw Error("Network in invalid");

@@ -3,8 +3,6 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useRouter } from "next/router";
 import React, { useMemo } from "react";
 
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-
 export interface DefaultLayoutProps {
   children: React.ReactNode;
 }
@@ -12,9 +10,6 @@ export interface DefaultLayoutProps {
 export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
   // ========== Nextjs ===========
   const router = useRouter();
-
-  // ========== Hook ===========
-  const { isDesktop } = useIsDesktop();
 
   // ========== Memo ===========
   const currentPathBase = useMemo(() => {
@@ -59,15 +54,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
     <Flex minHeight={"100vh"} direction={"column"}>
       <Container as="section" maxW="8xl" mb="8">
         <Box as="nav" py="4">
-          <Center
-            my="4"
-            position={"absolute"}
-            right="0"
-            left="0"
-            top={isDesktop ? "0" : undefined}
-            bottom={!isDesktop ? "0" : undefined}
-            h="8"
-          >
+          <Center my="4" position={"absolute"} right="0" left="0" top={"16"} h="8">
             <ButtonGroup bgColor={"white"} py="1" px="1" rounded="xl" shadow="md" size="xs">
               <Button onClick={onClickAccount} {...homeButtonProps}>
                 Account
@@ -90,7 +77,7 @@ export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
           </Flex>
         </Box>
       </Container>
-      <Container maxW="2xl">
+      <Container maxW="2xl" py="12">
         <Box py="8" px="8" boxShadow={"base"} borderRadius="2xl" bgColor={"white"}>
           {children}
         </Box>

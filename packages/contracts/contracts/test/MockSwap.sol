@@ -14,9 +14,9 @@ contract MockSwap {
   }
 
   // this is just a mock contract to test
-  function swap() public payable {
+  function swap(address receipient) public payable {
     uint256 amount = getOutputAmount(msg.value);
-    token.mint(msg.sender, amount);
+    token.mint(receipient, amount);
   }
 
   function getOutputAmount(uint256 value) public view returns (uint256) {

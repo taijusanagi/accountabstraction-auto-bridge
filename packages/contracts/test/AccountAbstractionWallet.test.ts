@@ -273,7 +273,7 @@ describe("AccountAbstractionWallet", () => {
         const amountOut = await mockSwap.getOutputAmount(amountIn);
         const usdc = IMockERC20__factory.connect(usdcInGoerli, signer);
         const previouBalance = await usdc.balanceOf(signer.address);
-        await mockSwap.swap({ value: amountIn });
+        await mockSwap.swap(signer.address, { value: amountIn });
         const currentBalance = await usdc.balanceOf(signer.address);
         expect(currentBalance).to.eq(previouBalance.add(amountOut));
       });
@@ -287,7 +287,7 @@ describe("AccountAbstractionWallet", () => {
         const previouBalance = await usdc.balanceOf(walletAddress);
         const op = await api.createSignedUserOp({
           target: mockSwap.address,
-          data: mockSwap.interface.encodeFunctionData("swap"),
+          data: mockSwap.interface.encodeFunctionData("swap", [walletAddress]),
           value: amountIn,
         });
         await entryPoint.handleOps([op], beneficiary);
